@@ -1,0 +1,172 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>易买网 - 首页</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/jquery-1.12.4.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/shop.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<head-tmp v-bind:cnum="num"></head-tmp>
+			<div id="childNav">
+				<div class="wrap">
+					<!-- 此处添加时间组件 -->
+					<time-tmp v-bind:user="userName"></time-tmp>
+				</div>
+			</div>
+			<!-- <div id="position" class="wrap">
+			您现在的位置：<a href="index.html">易买网</a> &gt; <a v-bind:href="'product-list.html?epcId='+productClass.epcId">{{productClass.epcId | doFilterProductClss(productClass.epcId)}}</a>
+		</div> -->
+			<div id="main" class="wrap">
+				<div class="lefter">
+					<left-tmp></left-tmp>
+				</div>
+
+				<div id="product" class="main">
+					<h1>{{product.epName}}</h1>
+					<div class="infos">
+						<div class="thumb">
+							<img v-bind:src="product.epFileName | doPictureFilter(product.epFileName)" height="200"
+								width="200" />
+						</div>
+						<div class="buy">
+							<p>商城价：<span class="price">￥{{product.epPrice}}</span></p>
+							<p>库　存：{{product.epStock}}</p>
+							<div class="button">
+								<input type="button" name="button" value="" v-on:click="goBuy" />
+								<a href="javascript:void(0)" v-on:click="addShopping">放入购物车</a>{{addShoppingMsg}}
+							</div>
+						</div>
+						<div class="clear"></div>
+					</div>
+					<div class="introduce">
+						<h2><strong>商品详情</strong></h2>
+						<div class="text">
+							{{product.epDescription}}
+						</div>
+					</div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<footer-tmp></footer-tmp>
+		</div>
+	</body>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				num: '',
+				userName: '',
+				addShoppingMsg: '',
+				msgNum: 0,
+				product: {
+					epId: '',
+					epcId: '',
+					epName: '',
+					epPromotionCategory: '',
+					epPrice: '',
+					epStock: '',
+					epDescription: ''
+				},
+				recentProduct: []
+			},
+			filters: {
+				doPictureFilter: function(epFileName) {
+					console.log(server_url + epFileName);
+					return server_url + epFileName;
+				}
+			},
+			methods: {
+				//点击加入购物车和购买按钮之前要判断用户有没有登录
+				ifLogin: function() {
+					//判断是否登录了
+					if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+						var user = JSON.parse(sessionStorage.getItem("userMsg"));
+						
+						//判断账号是否被禁用，如果禁用了就跳转到登录页面
+						if (null == user.euStatus && "2" == user.euStatus) {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+				},
+				//添加到购物车
+				addShopping: function() {
+					this.ifLogin();
+					var user = JSON.parse(sessionStorage.getItem("userMsg"));
+					axios.get(
+						server_url + '/shoppingCart/addShoppingCart', {
+							params: {
+								euId: user.euId,
+								epId: this.product.epId
+							}
+						}
+					).then(res => {
+						this.msgNum++
+						this.addShoppingMsg = "添加成功+" + this.msgNum
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+				//直接购买
+				goBuy: function() {
+					this.ifLogin();
+					window.location.href = "buy.html?epId=" + this.product.epId
+				}
+			},
+			components: {
+				'head-tmp': head,
+				'left-tmp': left,
+				'footer-tmp': footer,
+				'time-tmp': time
+			},
+			mounted() {
+				var ep_Id = getUrlParam("epId");
+				axios.get(
+					server_url + '/product/getProductById', {
+						params: {
+							epId: ep_Id,
+						}
+					}
+				).then(res => {
+					this.product = res.data.t;
+					// 判断localStorage是否存在数据
+					if (localStorage.getItem("recent") == null || localStorage.getItem("recent") == '') {
+						// 往集合里添加数据
+						this.recentProduct.push(this.product);
+						// 将localStorage通过JSON转换并存放
+						localStorage.setItem("recent", JSON.stringify(this.recentProduct));
+						console.log(this.recentProduct);
+					} else {
+						var recent_product = JSON.parse(localStorage.getItem("recent"))
+						for (var i = 0; i < recent_product.length; i++) {
+							if (recent_product[i].epId == this.product.epId) {
+								return null;
+							}
+							this.recentProduct.push(recent_product[i]);
+						}
+						if(this.recentProduct.length > 3){
+							this.recentProduct.splice(0,1);
+							console.log("删除第一个元素!");
+							this.recentProduct.push(this.product);
+						}else{
+							this.recentProduct.push(this.product);
+						}
+						localStorage.setItem("recent", JSON.stringify(this.recentProduct));
+						console.log("本地缓存反复插入" + this.recentProduct);
+					}
+				}).catch(err => {
+					console.log(err);
+				});
+			}
+		})
+	</script>
+</html>

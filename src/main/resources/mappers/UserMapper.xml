@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.UserMapper">
+    <!--统计总条数-->
+    <select id="getUserCount" resultType="int" parameterType="com.jt99.myeasybuy.query.UserQuery">
+        select count(euId)
+        from easybuy_user
+    </select>
+
+    <!--条件分页查-->
+    <select id="getUserListBy" resultType="com.jt99.myeasybuy.entity.User" parameterType="com.jt99.myeasybuy.query.UserQuery">
+        SELECT euId, euUserName, euName, euPassword, euSex, euBirthday, euMobile, euPicture,
+        euType, euStatus
+        FROM easybuy_user
+            where euType = '1'
+        limit #{startIndex},#{pageSize}
+    </select>
+
+
+    <!--分页连表查-->
+    <resultMap id="resultMap1" type="com.jt99.myeasybuy.entity.User">
+        <id column="column01" property="euId"/>
+        <result column="column02" property="euUserName"/>
+        <result column="column03" property="euName"/>
+        <result column="column04" property="euPassword"/>
+        <result column="column05" property="euSex"/>
+        <result column="column06" property="euBirthday"/>
+        <result column="column07" property="euMobile"/>
+        <result column="column08" property="euPicture"/>
+        <result column="column09" property="euType"/>
+        <result column="column10" property="euStatus"/>
+        <!-- association标签用于映射city类中的province对象的属性名, property="province属性名" -->
+        <association property="type" javaType="com.jt99.myeasybuy.entity.ShippingAddress">
+            <id column="column11" property="property11"/>
+            <result column="column12" property="property12"/>
+            <result column="column13" property="property13"/>
+            <result column="column14" property="property14"/>
+            <result column="column15" property="property15"/>
+            <result column="column16" property="property16"/>
+            <result column="column17" property="property17"/>
+            <result column="column18" property="property18"/>
+            <result column="column19" property="property19"/>
+        </association>
+    </resultMap>
+
+    <select id="getUserInnerListBy" resultMap="resultMap1">
+        SELECT t1.euId       column01,
+               t1.euUserName column02,
+               t1.euName     column03,
+               t1.euPassword column04,
+               t1.euSex      column05,
+               t1.euBirthday column06,
+               t1.euMobile   column07,
+               t1.euPicture  column08,
+               t1.euType     column09,
+               t1.euStatus   column10,
+               t2.property11 column11,
+               t2.property12 column12,
+               t2.property13 column13,
+               t2.property14 column14,
+               t2.property15 column15,
+               t2.property16 column16,
+               t2.property17 column17,
+               t2.property18 column18,
+               t2.property19 column19
+        FROM easybuy_user t1
+                 inner join easybuy_shipping_address t2
+                            on t1.主键 = t2.外键
+            limit #{startIndex}
+           , #{pageSize};
+    </select>
+
+    <!--查所有-->
+    <select id="getUserList" resultType="com.jt99.myeasybuy.entity.User">
+        SELECT euId,
+               euUserName,
+               euName,
+               euPassword,
+               euSex,
+               euBirthday,
+               euMobile,
+               euPicture,
+               euType,
+               euStatus
+        FROM easybuy_user;
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addUser">
+        INSERT INTO easybuy_user (euId, euUserName, euName, euPassword, euSex, euBirthday, euMobile,
+                                  euPicture, euType, euStatus)
+        VALUES (#{euId}, #{euUserName}, #{euName}, #{euPassword}, #{euSex}, #{euBirthday}, #{euMobile},
+                #{euPicture}, #{euType}, #{euStatus});
+    </insert>
+
+    <!--登录-->
+    <select id="login" resultType="com.jt99.myeasybuy.entity.User">
+        SELECT euId,
+               euUserName,
+               euName,
+               euPassword,
+               euSex,
+               euBirthday,
+               euMobile,
+               euPicture,
+               euType,
+               euStatus
+        FROM easybuy_user
+        WHERE euUserName = #{euUserName};
+    </select>
+
+    <!--删-->
+    <delete id="deleteUserById">
+        DELETE
+        FROM easybuy_user
+        WHERE euId = #{euId};
+    </delete>
+
+    <!--改-->
+    <update id="updateUser" parameterType="com.jt99.myeasybuy.entity.User">
+        UPDATE easybuy_user
+        SET euName=#{euName},
+            euSex=#{euSex},
+            euMobile=#{euMobile},
+            euPicture=#{euPicture}
+        WHERE euId = #{euId};
+    </update>
+
+    <!--改密码-->
+    <update id="updatePassWord" parameterType="com.jt99.myeasybuy.entity.User">
+        UPDATE easybuy_user
+        SET euPassword=#{euPassword}
+        WHERE euId = #{euId};
+    </update>
+
+    <!--查单个-->
+    <select id="getUserById" resultType="com.jt99.myeasybuy.entity.User" parameterType="int">
+        SELECT euId,
+               euUserName,
+               euName,
+               euPassword,
+               euSex,
+               euBirthday,
+               euMobile,
+               euPicture,
+               euType,
+               euStatus
+        FROM easybuy_user
+        WHERE euId = #{euId};
+    </select>
+
+    <!--删多个-->
+    <delete id="deleteUsersByIds">
+        delete
+        from easybuy_user
+        where euId in #{ids};
+    </delete>
+
+    <!-- 管理员修改用户状态（启用）,将使用状态改为1-->
+    <update id="startEuStatus">
+        UPDATE easybuy_user
+        SET euStatus='1'
+        WHERE euId = #{euId};
+    </update>
+
+    <!-- 管理员修改用户状态（启用）,将使用状态改为2-->
+    <update id="stopEuStatus">
+        UPDATE easybuy_user
+        SET euStatus='2'
+            WHERE euId = #{euId};
+    </update>
+
+    <!--查单个-->
+    <select id="getManageById" resultType="com.jt99.myeasybuy.entity.User">
+        SELECT euUserName,
+               euPicture
+        FROM easybuy_user
+        WHERE euId = #{euId};
+    </select>
+
+
+</mapper>

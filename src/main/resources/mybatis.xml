@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- settings：控制mybatis全局行为，如日志-->
+    <settings>
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+
+    <!--设置实体类别名-->
+    <!--
+    <typeAliases>
+        <package name="com.howell.entity"/>
+        <package name="com.howell.query"/>
+    </typeAliases>
+    -->
+
+    <!--指定sql映射文件-->
+    <mappers>
+        <!--1、使用单个映射-->
+        <mapper resource="mappers/CommentMapper.xml"/>
+        <mapper resource="mappers/NewsMapper.xml"/>
+        <mapper resource="mappers/OrderDetailMapper.xml"/>
+        <mapper resource="mappers/OrderMapper.xml"/>
+        <mapper resource="mappers/ProductCategoryMapper.xml"/>
+        <mapper resource="mappers/ProductMapper.xml"/>
+        <mapper resource="mappers/ReplyMapper.xml"/>
+        <mapper resource="mappers/ShippingAddressMapper.xml"/>
+        <mapper resource="mappers/ShoppingCartMapper.xml"/>
+        <mapper resource="mappers/UserMapper.xml"/>
+        <mapper resource="mappers/OrderShoppingMapper.xml"/>
+        <mapper resource="mappers/UserShippingMapper.xml"/>
+    </mappers>
+</configuration>

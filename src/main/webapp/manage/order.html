@@ -1,0 +1,192 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>后台管理 - 易买网</title>
+	<link type="text/css" rel="stylesheet" href="../css/style.css" />
+	<script type="text/javascript" src="../scripts/function-manage.js"></script>
+	<script type="text/javascript" src="../scripts/vue.js"></script>
+	<script type="text/javascript" src="../scripts/navigation.js"></script>
+	<script type="text/javascript" src="../scripts/jquery-1.12.4.js"></script>
+	<script type="text/javascript" src="../scripts/axios.min.js"></script>
+	<script type="text/javascript" src="../scripts/pageTemplate.js"></script>
+	<script type="text/javascript" src="../scripts/param.js"></script>
+	<script type="text/javascript" src="../scripts/server_url.js"></script>
+</head>
+
+<body>
+	<div id="app">
+		<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+		<div id="main" class="wrap">
+			<div id="menu-mng" class="lefter">
+				<left-tmp></left-tmp>
+			</div>
+			<div class="main">
+				<h2>订单管理</h2>
+				<div class="manage">
+					<div class="search">
+						<form method="get">
+							订单号：<input type="text" class="text" name="orderId" v-model="eoId" /> 订货人：<input type="text"
+								class="text" name="userName" v-model="euName" /> <label class="ui-blue"><input
+									type="button" name="btn" value="查询" v-on:click="doQuery(1)" /></label>
+						</form>
+					</div>
+					<div class="spacer"></div>
+					<table class="list">
+						<tr>
+							<th>ID</th>
+							<th>姓名</th>
+							<th>收获地址</th>
+							<th>状态</th>
+							<th>操作</th>
+						</tr>
+						<tr v-for="(item, index) in page.list" :key="index">
+							<td class="first w4 c">{{item.eoId}}</td>
+							<td class="w1 c">{{item.user.euUserName}}</td>
+							<td>{{item.address.esaProvince}}{{item.address.esaCity}}{{item.address.esaCounty}}{{item.address.esaDetailedAddress}}</td>
+							<td class="w1 c">{{item.eoStatus | doFilterEoStatus(item.eoStatus)}}</td>
+							<td class="w1 c">
+								<a v-bind:href="'order-modify.html?eoId='+item.eoId">查看</a>
+								<a href="javascirpt:void(0);"  v-show="item.eoStatus == 4 || item.eoStatus == 2 " v-on:click="doChangeStatus(item.eoId, 1)">审核通过</a>
+								<a href="javascript:void(0);" v-show="item.eoStatus == 1" v-on:click="doChangeStatus(item.eoId, 3)">发货</a>
+								<a href="javascript:void(0);" v-show="item.eoStatus == 2 || item.eoStatus == 1" v-on:click="doChangeStatus(item.eoId, 4)">审核未通过</a>
+								<a href="javascript:void(0);" v-on:click="doDelete(item.eoId)">删除</a>
+							</td>
+						</tr>
+					</table>
+					<div class="pager">
+						<div>
+							<!-- 绑定点击事件 绑定数据 -->
+							<page-tmp v-on:dogopage="doPage" v-on:query="doQuery" v-bind:cpage="page"></page-tmp>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<footer-tmp></footer-tmp>
+	</div>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				current:'4',
+				userName:'',
+				eoId: '',
+				euName: '',
+				page: {
+					list: '',
+					totalCount: '',
+					totalPage: '',
+					pageNo: '',
+					pageSize: ''
+				}
+			},
+			methods: {
+				// 页面跳转
+				doPage: function (pageNo) {
+					if (pageNo == null || pageNo == '' || isNaN(pageNo)
+						|| pageNo > this.page.totalPage || pageNo < 1
+					) {
+						alert("页码不符合！");
+					} else {
+						this.doQuery(pageNo);
+					}
+				},
+				doQuery: function (pageNo) {
+					// 分页查询
+					axios.get(
+						server_url + '/order/getOrderByPage',
+						{
+							params: {
+								euName: this.euName,
+								eoId: this.eoId,
+								pageNo: pageNo,
+								pageSize: 5
+							}
+						}
+					).then(
+						res => {
+							console.log(res.data);
+							this.page = res.data.t;
+							console.log(this.page.list);
+						}
+					).catch(err => {
+						console.log(err);
+					});
+	
+				},
+	
+				// 删除
+				doDelete: function (eoId) {
+					alert("是否删除？");
+	
+					axios.get(
+						server_url + '/order/deleteOrder',
+						{
+							params: { eoId: eoId }
+						}
+					).then(res => {
+						alert("删除成功！");
+						window.location.reload();
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+	
+				// 修改订单状态
+				doChangeStatus: function (eoId, eoStatus) {
+					alert("是否修改订单状态？");
+	
+					axios.get(
+						server_url + '/order/updateOrderStatus',
+						{
+							params: { eoId: eoId, eoStatus: eoStatus }
+						}
+					).then(res => {
+						alert("修改成功！");
+						window.location.reload();
+					}).catch(err => {
+						console.log(err);
+					});
+				}
+			},
+			components: {
+				'head-tmp': head,
+				'left-tmp': left,
+				'page-tmp': pageTmp,
+				'footer-tmp': footer
+			},
+			filters: {
+				// 订单状态过滤器
+				doFilterEoStatus: function (eoStatus) {
+					var reuslt = null;
+					switch (eoStatus) {
+						case '1':
+							reuslt = "审核通过";
+							break;
+						case '4':
+							reuslt = "审核未通过";
+							break;
+						case '3':
+							reuslt = "已发货";
+							break;
+						case '2':
+							reuslt = "未审核";
+							break;
+						case '5':
+							reuslt = "订单已经完成";
+							break;	
+					}
+					return reuslt;
+				}
+			},
+			mounted() {
+				this.doQuery(1);
+			},
+		})
+	</script>
+</body>
+</html>

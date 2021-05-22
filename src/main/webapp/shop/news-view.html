@@ -1,0 +1,92 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>易买网 - 新闻</title>
+	<link type="text/css" rel="stylesheet" href="../css/style.css" />
+	<script type="text/javascript" src="../scripts/function.js"></script>
+	<script type="text/javascript" src="../scripts/vue.js"></script>
+	<script type="text/javascript" src="../scripts/shop.js"></script>
+	<script type="text/javascript" src="../scripts/param.js"></script>
+	<script type="text/javascript" src="../scripts/server_url.js"></script>
+	<script type="text/javascript" src="../scripts/axios.min.js"></script>
+	<script type="text/javascript" src="../scripts/news.js"></script>
+	<script type="text/javascript" src="../scripts/jquery-1.12.4.js"></script>
+</head>
+
+<body>
+	<div id="app">
+		<!-- 此处添加组件head -->
+		<head-tmp v-bind:cnum="num"></head-tmp>
+		<div id="childNav">
+			<div class="wrap">
+				<!-- 此处添加时间组件 -->
+				<time-tmp v-bind:user="userName"></time-tmp>
+
+			</div>
+		</div>
+		<div id="position" class="wrap">
+			您现在的位置：<a href="index.html">易买网</a> &gt; 阅读新闻
+		</div>
+		<div id="main" class="wrap">
+			<div class="left-side">
+				<news-tmp></news-tmp>
+			</div>
+			<div id="news" class="right-main">
+				<h1>{{news.enTitle}}</h1>
+				<div class="content" id="enContent" v-html="news.enContent">
+					<!-- {{news.enContent}} -->
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<!-- 此处添加组件footer -->
+		<footer-tmp></footer-tmp>
+	</div>
+</body>
+<script>
+	var vm = new Vue({
+		el: '#app',
+		data: {
+			num: '6',
+			userName: '用户',
+			news: {}
+		},
+		methods: {
+			HTMLEncode(text) {
+				let temp = document.createElement("div");
+				temp.innerHTML = text;
+				let output = temp.innerText || temp.textContent;
+				temp = null;
+				return output;
+			}
+		},
+		mounted: function () {
+
+			// 加载新闻信息
+			var enId = getUrlParam("enId");
+			// 获取数据
+			axios.get(
+				server_url + "/news/getNewsById",
+				{
+					params: { id: enId }
+				}
+			).then(res => {
+				this.news = res.data.t;
+				// html插入
+				// $("#enContent").html(this.news.enContent);
+			})
+		},
+		//注册组件
+		components: {
+			'head-tmp': head,
+			'time-tmp': time,
+			'footer-tmp': footer,
+			'news-tmp': newsTmp
+		}
+	})
+</script>
+
+</html>

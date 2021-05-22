@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.NewsMapper">
+    <!--统计总条数-->
+    <select id="getNewsCount" resultType="int" parameterType="com.jt99.myeasybuy.query.NewsQuery">
+        select count(enId)
+        from easybuy_news
+        where enType = #{enType}
+    </select>
+
+    <!--条件分页查-->
+    <select id="getNewsListBy" resultType="com.jt99.myeasybuy.entity.News" parameterType="com.jt99.myeasybuy.query.NewsQuery">
+        SELECT enId,
+               enTitle,
+               enType,
+               enCreateTime,
+               enContent
+        FROM easybuy_news
+        <where>
+            <if test="enType != null and enType != '' ">
+                enType = #{enType}
+            </if>
+        </where>
+        limit #{startIndex},#{pageSize}
+    </select>
+    
+
+    <!--查所有-->
+    <select id="getNewsList" resultType="com.jt99.myeasybuy.entity.News">
+        SELECT enId,
+               enTitle,
+               enType,
+               enCreateTime,
+               enContent
+        FROM easybuy_news;
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addNews" parameterType="com.jt99.myeasybuy.entity.News">
+        INSERT INTO easybuy_news (enTitle, enType, enCreateTime, enContent)
+        VALUES (#{enTitle}, #{enType}, #{enCreateTime}, #{enContent});
+    </insert>
+
+    <!--删-->
+    <delete id="deleteNewsById">
+        DELETE
+        FROM easybuy_news
+        WHERE enId = #{enId};
+    </delete>
+
+    <!--改-->
+    <update id="updateNews" parameterType="com.jt99.myeasybuy.entity.News">
+        UPDATE easybuy_news
+        <set>
+            <if test="enTitle != null and enTitle != ''">
+                enTitle=#{enTitle},
+            </if>
+            <if test="enType != null and enType != ''">
+                enType=#{enType},
+            </if>
+            <if test="enCreateTime != null and enCreateTime != ''">
+                enCreateTime=#{enCreateTime},
+            </if>
+            <if test="enContent != null and enContent != ''">
+                enContent=#{enContent}
+            </if>
+        </set>
+        WHERE enId = #{enId};
+    </update>
+
+    <!--查单个-->
+    <select id="getNewsById" resultType="com.jt99.myeasybuy.entity.News" parameterType="int">
+        SELECT enId,
+               enTitle,
+               enType,
+               enCreateTime,
+               enContent
+        FROM easybuy_news
+        WHERE enId = #{enId};
+    </select>
+
+    <!--删多个-->
+    <delete id="deleteNewssByIds">
+        delete
+        from easybuy_news
+        where enId in #{ids};
+    </delete>
+
+    <!-- 根据类型进行查询 -->
+    <select id="getNewsByEnType" resultType="com.jt99.myeasybuy.entity.News" parameterType="String">
+        SELECT enId,
+               enTitle,
+               enType,
+               enCreateTime,
+               enContent
+        FROM easybuy_news
+        WHERE enType = #{enType}
+        order by enCreateTime desc
+        limit 0,12;
+    </select>
+</mapper>

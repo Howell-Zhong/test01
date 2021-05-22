@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.CommentMapper">
+    <!--统计总条数-->
+    <select id="getCommentCount" resultType="int" parameterType="com.jt99.myeasybuy.query.CommentQuery">
+        select count(t1.ecId)
+        FROM easybuy_comment t1
+            left join easybuy_reply t2
+            on t1.ecId = t2.ecId
+            left join easybuy_user t3
+            on t1.euId = t3.euId
+        <include refid="getCommentListBySQL" />
+    </select>
+
+    <!--条件分页查-->
+    <select id="getCommentListBy" resultType="com.jt99.myeasybuy.entity.Comment"
+            parameterType="com.jt99.myeasybuy.query.CommentQuery">
+        SELECT ecId,
+               euId,
+               ecTitle,
+               ecCreateTime,
+               ecContent
+        FROM easybuy_comment
+            limit #{startIndex},#{pageSize}
+    </select>
+
+    <!--分页连表查-->
+    <resultMap id="resultMap1" type="com.jt99.myeasybuy.entity.Comment">
+        <id column="column01" property="ecId"/>
+        <result column="column02" property="euId"/>
+        <result column="column03" property="ecTitle"/>
+        <result column="column04" property="ecCreateTime"/>
+        <result column="column05" property="ecContent"/>
+        <!-- association标签用于映射Comment类中的reply属性名, property="reply属性名" -->
+        <association property="reply" javaType="com.jt99.myeasybuy.entity.Reply">
+            <id column="column11" property="erId"/>
+            <result column="column12" property="ecId"/>
+            <result column="column13" property="euId"/>
+            <result column="column14" property="erReplyTime"/>
+            <result column="column15" property="erReplyContent"/>
+        </association>
+        <association property="user" javaType="com.jt99.myeasybuy.entity.User">
+            <id column="column21" property="euId"/>
+            <result column="column22" property="euUserName"/>
+            <result column="column23" property="euName"/>
+            <result column="column24" property="euPassword"/>
+            <result column="column25" property="euSex"/>
+            <result column="column26" property="euBirthday"/>
+            <result column="column27" property="euMobile"/>
+            <result column="column28" property="euPicture"/>
+            <result column="column29" property="euType"/>
+            <result column="column30" property="euStatus"/>
+        </association>
+    </resultMap>
+
+    <select id="getCommentInnerListBy" resultMap="resultMap1">
+        SELECT t1.ecId column01,
+               t1.euId column02,
+               t1.ecTitle column03,
+               t1.ecCreateTime column04,
+               t1.ecContent column05,
+               t2.erId column11,
+               t2.ecId column12,
+               t2.euId column13,
+               t2.erReplyTime column14,
+               t2.erReplyContent column15,
+               t3.euId column21,
+               t3.euUserName column22,
+               t3.euName column23,
+               t3.euPassword column24,
+               t3.euSex column25,
+               t3.euBirthday column26,
+               t3.euMobile column27,
+               t3.euPicture column28,
+               t3.euType column29,
+               t3.euStatus column30
+        FROM easybuy_comment t1
+        left join easybuy_reply t2
+            on t1.ecId = t2.ecId
+        left join easybuy_user t3
+            on t1.euId = t3.euId
+        <include refid="getCommentListBySQL" />
+        order by t1.ecId desc
+        limit #{startIndex}, #{pageSize};
+    </select>
+
+    <sql id="getCommentListBySQL">
+        <where>
+            <if test="euUserName != null and euUserName != ''">
+                and `euUserName` like concat('%',#{euUserName},'%')
+            </if>
+            <if test="euName != null and euName != ''">
+                and euName like concat('%',#{euName},'%')
+            </if>
+            <if test="euSex != null and euSex != ''">
+                and euSex = #{euSex}
+            </if>
+            <if test="erId == 2">
+                and erId is not null
+            </if>
+            <if test="erId == 3">
+                and erId is null
+            </if>
+            <if test="euId != null and euId != ''">
+                and t1.euId = #{euId}
+            </if>
+
+        </where>
+    </sql>
+
+    <!--查所有-->
+    <select id="getCommentList" resultType="com.jt99.myeasybuy.entity.Comment">
+        SELECT ecId,
+               euId,
+               ecTitle,
+               ecCreateTime,
+               ecContent
+        FROM easybuy_comment;
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addComment">
+        INSERT INTO easybuy_comment (ecId, euId, ecTitle, ecCreateTime, ecContent)
+        VALUES (#{ecId}, #{euId}, #{ecTitle}, #{ecCreateTime}, #{ecContent});
+    </insert>
+
+    <!--删-->
+    <delete id="deleteCommentById">
+        DELETE
+        FROM easybuy_comment
+        WHERE ecId = #{ecId};
+    </delete>
+
+    <!--改-->
+    <update id="updateComment">
+        UPDATE easybuy_comment
+        SET euId=#{euId},
+            ecTitle=#{ecTitle},
+            ecCreateTime=#{ecCreateTime},
+            ecContent=#{ecContent}
+        WHERE ecId = #{ecId};
+    </update>
+
+    <!--查单个-->
+    <select id="getCommentById" resultType="com.jt99.myeasybuy.entity.Comment">
+        SELECT ecId,
+               euId,
+               ecTitle,
+               ecCreateTime,
+               ecContent
+        FROM easybuy_comment
+        WHERE ecId = #{ecId};
+    </select>
+
+    <!--删多个-->
+    <delete id="deleteCommentsByIds">
+        delete
+        from easybuy_comment
+        where ecId in #{ids};
+    </delete>
+
+</mapper>

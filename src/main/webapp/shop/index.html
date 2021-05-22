@@ -1,0 +1,142 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>易买网 - 首页</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/shop.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+		<script type="text/javascript" src="../scripts/news.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:cnum="num"></head-tmp>
+			
+			<div id="childNav">
+				<div class="wrap">
+					<!-- 此处添加时间组件 -->
+					<time-tmp v-bind:user="userName"></time-tmp>
+				</div>
+			</div>
+			<div id="main" class="wrap">
+				<div class="lefter">
+					<!-- 此处添加组件left -->
+					<left-tmp></left-tmp>
+					
+					<div class="spacer"></div>
+					<!-- 此处最近浏览组件 -->
+					<lastview-tmp></lastview-tmp>
+				</div>
+				<div class="main">
+					<div class="price-off">
+						<h2>今日特价</h2>
+						<ul class="product clearfix">
+							<li v-for="(item, index) in product1" :key="index">
+								<dl>
+									<dt>
+										<!-- 此处是商品展示将图片放在一个链接内，这样点击图片就可以访问商品了，动态获取产品ID要用单引号将写定的代码括起来，
+										然后用+，连接动态获取的部分，加上rel="opener"新打开的标签页不会清空sessionStorage -->
+										<a v-bind:href="'product-view.html?epId='+item.epId" target="_blank" rel="opener">
+											<!-- 此处用了图片过滤器，给图片加上域名 -->
+											<img v-bind:src="item.epFileName | doPictureFilter(item.epFileName)" />
+										</a>
+									</dt>
+									<dd class="title">
+										<!--将标题放在一个链接内，这样点击图片就可以访问商品了，动态获取产品ID要用单引号将写定的代码括起来，
+										然后用+，连接动态获取的部分，加上rel="opener"新打开的标签页不会清空sessionStorage  -->
+										<a v-bind:href="'product-view.html?epId='+item.epId" target="_blank" rel="opener">{{item.epName}}</a>
+									</dd>
+									<dd class="price">￥{{item.epPrice}}</dd>
+								</dl>
+							</li>
+						</ul>
+					</div>
+					<div class="side">
+						<news-tmp></news-tmp>
+					</div>
+					<div class="spacer clear"></div>
+					<div class="hot">
+						<h2>热卖推荐</h2>
+						<ul class="product clearfix">
+							<li v-for="(item, index) in product2">
+								<dl>
+									<dt>
+										<a v-bind:href="'product-view.html?epId='+item.epId" target="_blank" rel="opener"><img v-bind:src="item.epFileName | doPictureFilter(item.epFileName)" />
+										</a>
+									</dt>
+									<dd class="title">
+										<a v-bind:href="'product-view.html?epId='+item.epId" target="_blank" rel="opener">{{item.epName}}</a>
+									</dd>
+									<dd class="price">￥{{item.epPrice}}</dd>
+								</dl>
+							</li>
+						</ul>
+					</div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+	</body>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				num: '3',
+				epcId: '',
+				userName: '',
+				product1:{},
+				product2:{},
+				announcements:{},
+				news:{}
+			},
+			methods: {
+				
+			},
+			filters:{
+				//图片过滤器
+				doPictureFilter:function(epFileName){
+					console.log(server_url + epFileName);
+					return server_url + epFileName;
+				}
+			},
+			mounted: function() {
+				axios.get(
+					server_url + '/product/getProductByPromotionCategory',
+					{
+						params:{epPromotionCategory: '1'}
+					}
+				).then(res=>{
+					this.product1 = res.data.t;
+				});
+
+				axios.get(
+					server_url + '/product/getProductByPromotionCategory',
+					{
+						params:{epPromotionCategory: '2'}
+					}
+				).then(res=>{
+					this.product2 = res.data.t;
+					console.log(this.product2)
+				});
+				
+			},
+			//注册组件
+			components: {
+				'head-tmp': head,
+				'time-tmp': time,
+				'left-tmp': left,
+				'lastview-tmp': lastView,
+				'footer-tmp': footer,
+				'news-tmp': newsTmp
+			}
+		})
+	</script>
+</html>

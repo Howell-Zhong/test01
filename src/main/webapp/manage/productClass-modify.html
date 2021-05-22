@@ -1,0 +1,112 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>后台管理 - 易买网</title>
+<link type="text/css" rel="stylesheet" href="../css/style.css" />
+<script type="text/javascript" src="../scripts/function-manage.js"></script>
+<script type="text/javascript" src="../scripts/axios.min.js"></script>
+<script type="text/javascript" src="../scripts/jquery-1.12.4.js"></script>
+<script type="text/javascript" src="../scripts/param.js"></script>
+<script type="text/javascript" src="../scripts/vue.js"></script>
+<script type="text/javascript" src="../scripts/navigation.js"></script>
+<script type="text/javascript" src="../scripts/server_url.js"></script>
+</head>
+<body>
+<div id="app">
+	<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+	<div id="main" class="wrap">
+		<div id="menu-mng" class="lefter">
+			<left-tmp></left-tmp>
+		</div>
+		<div class="main">
+			<h2>修改分类</h2>
+			<div class="manage">
+				<form action="manage-result.html">
+					<table class="form">
+						<tr>
+							<td class="field">父分类：</td>
+							<td>
+								<select name="epcFatherId" v-model="epcFatherId">
+									<option value="">根栏目</option>
+									<option v-for="(item, index) in parentClass" :value="item.epcId">{{item.epcName}}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td class="field">分类名称：</td>
+							<td><input type="text" class="text" name="className" value="" v-model="productClass.epcName"/></td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><label class="ui-blue"><input type="button" name="btn" value="更新" v-on:click="doUpdate"/></label></td>
+						</tr>
+					</table>
+				</form>
+			</div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<footer-tmp></footer-tmp>
+</div>
+</body>
+<script>
+	var vm = new Vue({
+		el:'#app',
+		data:{
+			epcId:'',
+			epcName:'',
+			epcFatherId:'',
+			productClass:{},
+			parentClass:{}
+		},
+		methods: {
+			// 更新分类
+			doUpdate:function(){
+				var formData = new FormData();
+				formData.append("epcId", this.productClass.epcId);
+				formData.append("epcName",this.productClass.epcName);
+				formData.append("epcFatherId", this.epcFatherId);
+
+				axios.post(
+					server_url + '/productClass/updateProductClass',
+					formData,
+					{
+						headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+					}
+				).then(res=>{
+					alert("更新成功！");
+				})
+			}
+		},
+		components:{
+			'head-tmp': head,
+			'left-tmp': left,
+			'footer-tmp': footer
+		},
+		mounted() {
+			var epc_Id = getUrlParam("epcId");
+			var epc_FatherId = getUrlParam("epcFatherId");
+
+			// 获取分类
+			axios.get(
+				server_url + '/productClass/getProductClassFather'
+			).then(res=>{
+				this.parentClass = res.data.t;
+			}).catch(err=>{
+				console.log(err);
+			});
+
+			// 根据id查询分类信息
+			axios.get(
+				server_url + '/productClass/getProductClassById',
+				{
+					params:{epcId:epc_Id}
+				}
+			).then(res=>{
+				this.productClass = res.data.t;
+			})
+		},
+	})
+</script>
+</html>

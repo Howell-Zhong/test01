@@ -1,0 +1,155 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>后台管理 - 易买网</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function-manage.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/user.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+			<div id="main" class="wrap">
+				<div id="menu-mng" class="lefter">
+					<!-- 此处添加组件left -->
+					<left-tmp></left-tmp>
+				</div>
+
+				<!-- 此处为动态数据，无法提取组件 -->
+				<div class="main">
+					<h2>增加地址</h2>
+					<div class="manage">
+						<form action="manage-result.html">
+							<table class="form">
+								<tr>
+									<td class="field">收货人：</td>
+									<td><input type="text" class="text" v-model="esaConsignee"/></td>
+								</tr>
+
+
+								<tr>
+									<td class="field">联系方式：</td>
+									<td><input type="text" class="text" v-model="esaMobile"/></td>
+								</tr>
+								<tr>
+									<td class="field">收货地址：</td>
+								</tr>
+								<tr>
+									<td class="field">省份：</td>
+									<td><input type="text" class="text" v-model="esaProvince"/></td>
+								</tr>
+								<tr>
+									<td class="field">市：</td>
+									<td><input type="text" class="text" v-model="esaCity"/></td>
+								</tr>
+								<tr>
+									<td class="field">区/县：</td>
+									<td><input type="text" class="text" v-model="esaCounty"/></td>
+								</tr>
+								<tr>
+									<td class="field">详细地址：</td>
+									<td><input type="text" class="text" v-model="esaDetailedAddress"/></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td><label class="ui-blue"><input type="button" value="增加" v-on:click="addUserShipping"/></label></td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+
+				<!-- 下面这个好像没用 -->
+				<div class="clear"></div>
+			</div>
+
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+
+		<script>
+			var vm = new Vue({
+				el: '#app',
+				data: {
+					current: '3',
+					userName: '',
+					euId:'',
+					esaConsignee:'',
+					esaMobile:'',
+					esaProvince:'',
+					esaCity:'',
+					esaCounty:'',
+					esaDetailedAddress:''
+					
+				},
+				methods: {
+					addUserShipping:function() {
+						var formData = new FormData();
+						formData.append("euId", this.euId);
+						formData.append("esaConsignee", this.esaConsignee);
+						formData.append("esaMobile", this.esaMobile);
+						formData.append("esaProvince", this.esaProvince);
+						formData.append("esaCity", this.esaCity);
+						formData.append("esaCounty", this.esaCounty);
+						formData.append("esaDetailedAddress", this.esaDetailedAddress);
+						axios.post(
+								server_url + '/user/addUserShipping',
+								formData,
+								{
+									headers: {'Content-Type': 'application/json'}
+								}
+						).then(res => {
+							//console.log(formData);
+							window.location.href = "address.html";
+						}).catch(err => {
+							console.log(err);
+						})
+					}
+				},
+				mounted: function() { //mounted函数在页面加载时执行
+
+					//判断是否登录了
+					if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+						var user = JSON.parse(sessionStorage.getItem("userMsg"));
+						this.euId = user.euId;
+						console.log(this.euId);
+						//判断账号是否被禁用
+						if (null != user.euStatus && user.euStatus == "1") {
+							//判断账号是否有用户名
+							if (null != user.euUserName) {
+								//取出用户名放在header
+								this.userName = user.euUserName;
+								//取出用户信息方便修改的时候传参
+								this.address.euId = user.euId;
+
+							} else {
+								window.location.href = "../shop/login.html"
+							}
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+					
+					
+
+				},
+				//注册组件
+				components: {
+					'head-tmp': head,
+					'left-tmp': left,
+					'footer-tmp': footer
+				}
+			})
+		</script>
+
+	</body>
+</html>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.OrderMapper">
+
+    <select id="getOrderCount" resultType="int" parameterType="com.jt99.myeasybuy.query.OrderQuery">
+        select count(1) from easybuy_order eo
+        left join easybuy_user eu
+        on eo.euId = eu.euId
+        <where>
+            <if test="eoId != null">
+                and eo.eoId = #{eoId}
+            </if>
+            <if test="esaId != null">
+                and eo.esaId = #{esaId}
+            </if>
+            <if test="euId != null">
+                and eo.euId = #{euId}
+            </if>
+            <if test="eoOrderTime != null and eoOrderTime != ''">
+                and eo.eoOrderTime = #{eoOrderTime}
+            </if>
+            <if test="eoStatus != null">
+                and eo.eoStatus = #{eoStatus}
+            </if>
+            <if test="eoCost != null">
+                and eo.eoCost = #{eoCost}
+            </if>
+            <if test="eoRemarks != null and eoRemarks != ''">
+                and eo.eoRemarks = #{eoRemarks}
+            </if>
+            <if test="euName != null and euName != ''">
+                and eu.euName = #{euName}
+            </if>
+        </where>
+    </select>
+
+
+
+    <resultMap type="com.jt99.myeasybuy.entity.vo.OrderVo" id="orderQueryResultMap">
+        <id column="eoId" property="eoId"/>
+        <result column="eoStatus" property="eoStatus"/>
+        <result column="eoRemarks" property="eoRemarks"/>
+        <result column="eoOrderTime" property="eoOrderTime"/>
+        <result column="eoCost" property="eoCost"/>
+        <association property="user" javaType="com.jt99.myeasybuy.entity.User">
+            <id column="euId" property="euId"/>
+            <result column="euName" property="euName"/>
+            <result column="euUserName" property="euUserName"/>
+        </association>
+        <association property="address" javaType="com.jt99.myeasybuy.entity.ShippingAddress">
+            <id column="esaId" property="esaId"/>
+            <result column="esaProvince" property="esaProvince"/>
+            <result column="esaCity" property="esaCity"/>
+            <result column="esaCounty" property="esaCounty"/>
+            <result column="esaMobile" property="esaMobile"/>
+            <result column="esaConsignee" property="esaConsignee"/>
+            <result column="esaDetailedAddress" property="esaDetailedAddress"/>
+        </association>
+    </resultMap>
+
+    <!-- 多对一  -->
+    <select id="getOrderByPage" resultMap="orderQueryResultMap" resultType="com.jt99.myeasybuy.entity.vo.OrderVo" parameterType="com.jt99.myeasybuy.query.OrderQuery">
+        SELECT eo.eoId,eo.eoCost,eo.eoRemarks,eo.eoOrderTime,
+               eo.eoStatus ,eu.euName,eu.euUserName,esa.esaConsignee,esa.esaMobile,
+               esa.`esaProvince`,esa.`esaCity`,esa.`esaCounty`, esa.esaDetailedAddress
+        FROM easybuy_order eo
+        left join easybuy_user eu
+                    on eo.euId = eu.euId
+        left join easybuy_shipping_address esa
+                   on eo.esaId = esa.esaId
+        <where>
+            <if test="eoId != null">
+                and eo.eoId = #{eoId}
+            </if>
+            <if test="euName != null and euName != ''">
+                and eu.euName like concat('%',#{euName},'%')
+            </if>
+        </where>
+        limit #{pageStart}, #{pageSize};
+    </select>
+
+    <!-- 通过id查询  -->
+    <select id="getOrderById" resultMap="orderQueryResultMap" resultType="com.jt99.myeasybuy.entity.vo.OrderVo" parameterType="int">
+        SELECT eo.eoId,eo.eoCost,eo.eoRemarks,eo.eoOrderTime,
+        eo.eoStatus ,eu.euName,esa.esaConsignee,esa.esaMobile,
+        esa.`esaProvince`,esa.`esaCity`,esa.`esaCounty`, esa.esaDetailedAddress
+        FROM easybuy_order eo
+        left join easybuy_user eu
+        on eo.euId = eu.euId
+        left join easybuy_shipping_address esa
+        on eo.esaId = esa.esaId
+        where eo.eoId = #{eoId}
+    </select>
+
+    <delete id="deleteOrder" parameterType="int">
+        delete from easybuy_order
+        where eoId = #{eoId};
+    </delete>
+
+    <!-- 修改订单状态 -->
+    <update id="updateOrderStatus" parameterType="int">
+        update easybuy_order
+        <set>
+            eoStatus = #{eoStatus},
+        </set>
+        where eoId = #{eoId};
+    </update>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addOrder" useGeneratedKeys="true" keyProperty="eoId" >
+        INSERT INTO easybuy_order (esaId, euId, eoOrderTime, eoStatus, eoCost, eoRemarks)
+        VALUES (#{esaId}, #{euId}, #{eoOrderTime}, #{eoStatus}, #{eoCost}, #{eoRemarks});
+    </insert>
+    <!--用户个人订单信息-->
+    <resultMap id="getOrderListRM" type="com.jt99.myeasybuy.entity.vo.OrderVo">
+    <id column="eoId" property="eoId"/>
+    <result column="eoStatus" property="eoStatus"/>
+    <association property="address" javaType="com.jt99.myeasybuy.entity.ShippingAddress">
+
+
+        <result column="esaConsignee" property="esaConsignee"/>
+        <result column="esaProvince" property="esaProvince"/>
+        <result column="esaCity" property="esaCity"/>
+        <result column="esaCounty" property="esaCounty"/>
+        <result column="esaDetailedAddress" property="esaDetailedAddress"/>
+    </association>
+    </resultMap>
+    <select id="getOrderList" parameterType="int" resultMap="getOrderListRM">
+        SELECT
+easybuy_order.`euId`,easybuy_order.`eoId`,easybuy_shipping_address.`esaConsignee`,easybuy_shipping_address.`esaProvince`,
+easybuy_shipping_address.`esaCity`,easybuy_shipping_address.`esaCounty`,easybuy_shipping_address.`esaDetailedAddress`,easybuy_order.`eoStatus`
+FROM easybuy_order INNER JOIN easybuy_shipping_address
+ON easybuy_order.`esaId` = easybuy_shipping_address.`esaId`
+INNER JOIN easybuy_user
+ON easybuy_user.`euId` = easybuy_order.`euId`
+WHERE easybuy_user.`euId`=#{euId}
+limit #{pageStart},#{pageSize}
+    </select>
+    <select id="getOrderListCount" resultType="int" parameterType="com.jt99.myeasybuy.query.OrderQuery">
+         SELECT COUNT(1) FROM easybuy_order where eoId=#{eoId}
+    </select>
+
+
+</mapper>

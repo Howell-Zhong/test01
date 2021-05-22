@@ -1,0 +1,154 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>后台管理 - 易买网</title>
+<link type="text/css" rel="stylesheet" href="../css/style.css" />
+<script type="text/javascript" src="../scripts/function-manage.js"></script>
+<script type="text/javascript" src="../scripts/vue.js"></script>
+<script type="text/javascript" src="../scripts/navigation.js"></script>
+<script type="text/javascript" src="../scripts/jquery-1.12.4.js"></script>
+<script type="text/javascript" src="../scripts/axios.min.js"></script>
+<script type="text/javascript" src="../scripts/server_url.js"></script>
+<script type="text/javascript" src="../scripts/functionAdd.js"></script>
+</head>
+<style>
+	span { display:none; vertical-align:middle; margin-left:10px; padding-left:22px; padding-right:10px; background:url(../images/bg.png) -232px -63px no-repeat; }
+	span.error { display:inline-block; border:1px solid #ff835a; background-color:#ffe8e0; }
+	table .current { background:#edffd5; }
+</style>
+<body>
+<div id="add">
+	<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+	<div id="main" class="wrap">
+		<div id="menu-mng" class="lefter">
+			<left-tmp></left-tmp>
+		</div>
+		
+		<div class="main">
+			<h2>添加商品</h2>
+			<div class="manage">
+				<form action="manage-result.html">
+					<table class="form">
+						<!-- <tr>
+							<td class="field">商品编号：</td>
+							<td><input type="text" class="text" name="epId" value="" v-model="epId"/></td>
+						</tr> -->
+						<tr>
+							<td class="field">商品名称：</td>
+							<td><input type="text" class="text" name="epName" value="" v-model="epName" onblur="CheckProduct(this)" onfocus="FocusProduct(this)"/><span></span></td>
+						</tr>
+						<tr>
+							<td class="field">所属分类：</td>
+							<td>
+								<select name="epcId" v-model="epcId">
+									<option v-for="(item, index) in productClass" :key="index" :value="item.epcId">{{item.epcName}}</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td class="field">推广类别1</td>
+							<td>
+								<input type="radio" name="epPromotionCategory" value="1" v-model="epPromotionCategory" />热卖推荐
+								<input type="radio" name="epPromotionCategory" value="2" v-model="epPromotionCategory"/>今日特卖
+								<input type="radio" name="epPromotionCategory" value="3" v-model="epPromotionCategory" />无推广
+
+							</td>
+						</tr>
+						<tr>
+							<td class="field">商品图片：</td>
+							<td><input type="file" class="text" name="epPicture"  /></td>
+						</tr>
+						<tr>
+							<td class="field">商品价格：</td>
+							<td><input type="text" class="text tiny" name="epPrice" v-model="epPrice" onblur="CheckProduct(this)" onfocus="FocusProduct(this)"/> 元 <span></span></td>
+						</tr>
+						<tr>
+							<td class="field">库存：</td>
+							<td><input type="text" class="text tiny" name="epStock" v-model="epStock" onblur="CheckProduct(this)" onfocus="FocusProduct(this)"/><span></span></td>
+						</tr>
+						<tr>
+							<td class="field">商品详情：</td>
+							<td><textarea name="epDescription" v-model="epDescription" onblur="CheckProduct(this)" onfocus="FocusProduct(this)"></textarea><span></span></td>
+						</tr>
+						<tr>
+							<td class="field"></td>
+							<td>
+								<input type="radio" name="epStatus" value="1" v-model="epStatus"/>上架
+								<input type="radio" name="epStatus" value="2" v-model="epStatus" />下架
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td><label class="ui-blue"><input type="button" name="btn" value="添加" v-on:click="doAdd"/></label></td>
+						</tr>
+					</table>
+				</form>
+			</div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<footer-tmp></footer-tmp>
+</div>	
+</body>
+<script>
+
+	var vm = new Vue({
+		el:'#add',
+		data:{
+			current: '3',
+			userName:'',
+			productClass:{},
+			// epId:'',
+			epcId:'',
+			epName: '',
+			epPromotionCategory:'',
+			epPrice:'',
+			epStock: '',
+			epStatus:'',
+			epDescription: ''
+		},
+		methods: {
+			// 添加商品
+			doAdd:function(){
+				// 文件上传格式
+				var formdata = new FormData();
+				// formdata.append('epId',this.epId);
+				formdata.append('epcId',this.epcId);
+				formdata.append('epPicture',$("input[name='epPicture']")[0].files[0]);
+				formdata.append('epName',this.epName);
+				formdata.append('epPromotionCategory',this.epPromotionCategory);
+				formdata.append('epPrice',this.epPrice);
+				formdata.append('epStock',this.epStock);
+				formdata.append('epStatus',this.epStatus);
+				formdata.append('epDescription',this.epDescription);
+				axios.post(
+					server_url + '/product/addProduct',
+					formdata,
+					{
+						// headers: {'Content-Type': 'application/x-www-form-urlencoded'}
+                        headers: {'Content-Type': 'multipart/form-data'}
+					}
+				).then(res=>{
+					alert("添加商品成功！");
+				}).catch(err=>{
+					console.log(err);
+				})
+			}
+		},
+		components:{
+			'head-tmp': head,
+			'left-tmp': left,
+			'footer-tmp': footer
+		},
+		mounted() {
+			// 获取分类信息
+			axios.get(
+				server_url + '/productClass/getProductClassList',
+				).then(res=>{
+					this.productClass = res.data.t;
+				});
+		},
+	});
+</script>
+</html>

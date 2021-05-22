@@ -1,0 +1,118 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>易买网 - 登录</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/shop.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:cnum="num"></head-tmp>
+			<div id="childNav">
+				<div class="wrap">
+
+				</div>
+			</div>
+			<div id="register" class="wrap">
+				<div class="shadow">
+					<em class="corner lb"></em>
+					<em class="corner rt"></em>
+					<div class="box">
+						<h1>欢迎回到易买网</h1>
+						<form id="loginForm" method="post" action="reg-result.html" onsubmit="return checkForm(this)">
+							<table>
+								<tr>
+									
+									<td class="field">用户名：</td>
+									<td><input class="text" type="text" name="userName" onfocus="FocusItem(this)" v-model="userName"
+											onblur="CheckItem(this);" /><span></span></td>
+								</tr>
+								<tr>
+									<td class="field">登录密码：</td>
+									<td><input class="text" type="password" id="passWord" name="passWord" v-model="passWord" 
+											onfocus="FocusItem(this)" onblur="CheckItem(this);" /><span></span></td>
+								</tr>
+								<!-- <tr>
+									<td class="field">验证码：</td>
+									<td><input class="text verycode" type="text" name="veryCode"
+											onfocus="FocusItem(this)" onblur="CheckItem(this);" /><img id="veryCode"
+											src="../" /><span></span></td>
+								</tr> -->
+								<tr>
+									<td></td>
+									<td><label class="ui-green"><input type="button" name="submit" v-on:click="doLogin()"
+												value="立即登录" /></label>
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+	</body>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				num: '3',
+				userName: '',
+				passWord: '',
+				errMsg:''
+
+			},
+			methods: {
+				//定义查询方法
+				doLogin: function() {
+					console.log("userName:" + this.userName);
+					console.log("passWord:" + this.passWord);
+					axios.post(
+						server_url + '/user/login', {
+							euUserName: this.userName,
+							euPassword: this.passWord
+						}, {
+							headers: {
+								'Content-Type': 'application/json'
+							}
+						}
+					).then(res=> {
+						if(res.data.resultCode=="00"){
+							//将对象转成字符串存入sessionStorage
+							var user = JSON.stringify(res.data.t);							
+							sessionStorage.setItem("userMsg",user);							
+							//将对象从sessionStorage中取出的方法
+							//var user = JSON.parse(sessionStorage.getItem("userMsg"));
+							
+							//跳转
+							window.location.href="index.html";
+						}else if(res.data.resultCode=="-1"){
+							this.errMsg = "错误";
+							console.log(this.errMsg)	
+						}
+					}).catch(err=>{
+						console.log(err);
+					})
+				}
+			},
+			mounted: function() { //mounted函数在页面加载时执行
+
+			},
+			//注册组件
+			components: {
+				'head-tmp': head,
+				'footer-tmp': footer
+			}
+		})
+	</script>
+</html>

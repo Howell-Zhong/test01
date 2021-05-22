@@ -1,0 +1,180 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>后台管理 - 易买网</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function-manage.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/user.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+			<div id="main" class="wrap">
+				<div id="menu-mng" class="lefter">
+					<!-- 此处添加组件left -->
+					<left-tmp></left-tmp>
+				</div>
+
+				<!-- 此处为动态数据，无法提取组件 -->
+				<div class="main">
+					<h2>收货地址</h2>
+					<div class="manage">
+						<table class="list">
+							<tr>
+								<th>收货人</th>
+								<th colspan="2">详细地址</th>
+								<th>联系方式</th>
+								<th>操作</th>
+								<th></th>
+							</tr>
+							<tr v-for="(item,index) in UserShipping.list">
+								<td>{{item.esaConsignee}}</td>
+								<td colspan="2">{{item.esaProvince}}{{item.esaCity}}{{item.esaCounty}}{{item.esaDetailedAddress}}</td>
+								<td>{{item.esaMobile}}</td>
+								<td><a v-bind:href="'address-resilt.html?esaId='+item.esaId">修改</a> <br /> <a href="javascript:Delete(0)" v-on:click="doDel(item.esaId)">删除</a></td>
+								<td v-show="item.esaDefault==0"><a href="javascript:void(0)"  v-on:click="updateUser(item.esaId)">设为默认</a></td>
+								<td v-show="item.esaDefault==1">默认地址</td>
+							</tr>
+						</table>
+						<div class="pager">
+							<ul class="clearfix">
+								<a href="javascript:void(0)" v-show="UserShipping.pageNo>1" v-on:click="getUserShipping(1)">首页</a>
+								<a href="javascript:void(0)" v-show="UserShipping.pageNo>1" v-on:click="getUserShipping(UserShipping.pageNo-1)">上一页</a>
+								<a href="javascript:void(0)" v-show="UserShipping.pageNo<UserShipping.totalPage" v-on:click="getUserShipping(UserShipping.pageNo+1)">下一页</a>
+								<a href="javascript:void(0)" v-show="UserShipping.pageNo<UserShipping.totalPage" v-on:click="getUserShipping(UserShipping.totalPage)">尾页</a>
+								第{{UserShipping.pageNo}}/{{UserShipping.totalPage}}页 共{{UserShipping.totalCount}}条记录
+								<input type="text" name="goPage" value="" size="1" v-model="goPage" />
+								<input type="button" name="goPageBtn" value="go" v-on:click="doGoPage"/>
+
+							</ul>
+						</div>
+					</div>
+				</div>
+
+				<!-- 下面这个好像没用 -->
+				<div class="clear"></div>
+			</div>
+
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+
+
+		<script>
+			
+			var vm = new Vue({
+				el: '#app',
+				data: {
+					current: '3',
+					userName: '',
+					euId:'',
+					UserShipping:{},
+					goPage:''
+				},
+				methods:{
+					getUserShipping:function(pageNo){
+						axios.get(
+								server_url+'/user/getUserShippingList',
+								{
+									params:{
+										euId:this.euId,
+										pageNo:pageNo,
+										pageSize:3
+									}
+								}).then(res=>{
+							this.UserShipping = res.data.t;
+							//this.Page = res.data;
+						}).catch(err=>{
+							console.log(err);
+						})
+					},
+					doDel:function(esaId){
+						//发送请求
+						axios.get(
+								server_url+'/user/deleteUserShipping',
+								{
+									params:{
+										esaId:esaId
+									}
+								}
+						).then(res=>{
+							//删除成功后刷新当前页面
+							window.location.reload();
+						}).catch(err=>{
+							console.log(err);
+						})
+					},
+					doGoPage:function(){
+						//对goPage进行判断
+						if(this.goPage == '' || isNaN(this.goPage) || this.goPage < 1 || this.goPage > this.UserShipping.totalPage){
+							alert("输入的页码不合法,请重新输入");
+							return;
+						}
+						//输入的页码合法则调用doQuery函数
+						this.getUserShipping(this.goPage);
+					},
+					updateUser:function(esaId){
+						var formData = new FormData();
+						formData.append("esaId", esaId);
+						formData.append("euId", this.euId);
+						axios.post(
+								server_url+'/user/updateUserEsaDefault',
+								formData,
+								{
+									headers: {'Content-Type': 'application/json'}
+								}
+						).then(res=>{
+							//修改成功后刷新当前页面
+							window.location.reload();
+						}).catch(err=>{
+							
+							console.log(err);
+						})
+					}
+				},
+				filters:{
+					doesaDefault:function(esaDefault){
+						return esaDefault==0?'设为默认':'默认地址';
+					}
+				},
+				mounted: function() { //mounted函数在页面加载时执行
+					
+					//判断是否登录了
+					if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+						var user = JSON.parse(sessionStorage.getItem("userMsg"));
+						this.euId = user.euId;
+						//判断账号是否被禁用
+						if (null != user.euStatus && user.euStatus == "1") {
+							//判断账号是否有用户名
+							if (null != user.euUserName) {
+								this.userName = user.euUserName;
+
+								this.getUserShipping(1);
+							} else {
+								window.location.href = "../shop/login.html"
+							}
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+				},
+				//注册组件
+				components: {
+					'head-tmp': head,
+					'left-tmp': left,
+					'footer-tmp': footer
+				}
+			})
+		</script>
+
+	</body>
+</html>

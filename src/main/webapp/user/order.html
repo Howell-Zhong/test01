@@ -1,0 +1,147 @@
+<!DOCTYPE html
+		PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>后台管理 - 易买网</title>
+	<link type="text/css" rel="stylesheet" href="../css/style.css" />
+	<script type="text/javascript" src="../scripts/function-manage.js"></script>
+	<script type="text/javascript" src="../scripts/vue.js"></script>
+	<script type="text/javascript" src="../scripts/user.js"></script>
+	<script type="text/javascript" src="../scripts/param.js"></script>
+	<script type="text/javascript" src="../scripts/server_url.js"></script>
+	<script type="text/javascript" src="../scripts/axios.min.js"></script>
+</head>
+<body>
+<div id="app">
+	<!-- 此处添加组件head -->
+	<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+	<div id="main" class="wrap">
+		<div id="menu-mng" class="lefter">
+			<!-- 此处添加组件left -->
+			<left-tmp></left-tmp>
+		</div>
+
+		<!-- 此处为动态数据，无法提取组件 -->
+		<div class="main">
+			<h2>订单管理</h2>
+			<div class="manage">
+				<div class="search">
+					<form method="get">
+						订单号：<input type="text" class="text" name="orderId" /> 订货人：<input type="text"
+																						 class="text" name="userName" /> <label class="ui-blue"><input type="submit"
+																																					   name="submit" value="查询" /></label>
+					</form>
+				</div>
+				<div class="spacer"></div>
+				<table class="list">
+					<tr>
+						<th>订单号</th>
+						<th>收货人</th>
+						<th>收货地址</th>
+						<th>交易状态</th>
+						<th>操作</th>
+					</tr>
+					<tr v-for="item in OrderVo.list">
+						<th>{{item.eoId}}</th>
+						<th>{{item.address.esaConsignee}}</th>
+						<th>{{item.address.esaProvince}}{{item.address.esaCity}}{{item.address.esaCounty}}{{item.address.esaDetailedAddress}}</th>
+						<th>{{item.eoStatus}}</th>
+						<th>
+
+							<a href="guestbook-modify.html">追加评论</a></br>
+							<a :href="'order-lookup.html?eoId='+item.eoId">订单详情</a></br>
+							<a href="javascript:Delete(1);">删除</a>
+
+						</th>
+
+					</tr>
+
+				</table>
+				
+			</div>
+		</div>
+
+		<!-- 下面这个好像没用 -->
+		<div class="clear"></div>
+	</div>
+
+	<!-- 此处添加组件footer -->
+	<footer-tmp></footer-tmp>
+</div>
+
+<script>
+	var vm = new Vue({
+		el: '#app',
+		data: {
+			current: '4',
+			userName: '',
+			euId:'',
+			OrderVo:{
+
+			},
+
+			address:{}
+
+
+
+
+		},
+		methods:{
+			getOrderList:function(euId){
+				axios.get(
+						server_url + '/order/getOrderList',
+						{
+							params:{
+								euId:euId,
+								eoId:1,
+								pageNo:1,
+								pageSize:3
+							}
+						}
+				).then(res=>{
+					this.OrderVo = res.data.t
+					console.log(this.OrderVo)
+					this.address = res.data.t.address;
+					console.log(this.euId)
+				}).catch(err=>{
+					console.log(err)
+					console.log(this.euId)
+				})
+			}
+		},
+		mounted: function() { //mounted函数在页面加载时执行
+			//判断是否登录了
+			if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+				var user = JSON.parse(sessionStorage.getItem("userMsg"));
+				//判断账号是否被禁用
+				if (null != user.euStatus && user.euStatus == "1") {
+					//判断账号是否有用户名
+					if (null != user.euUserName) {
+						//取出用户名放在header
+						this.userName = user.euUserName;
+						this.euId= user.euId;
+
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+				} else {
+					window.location.href = "../shop/login.html"
+				}
+			} else {
+				window.location.href = "../shop/login.html"
+			}
+
+			this.getOrderList(this.euId)
+		},
+		//注册组件
+		components: {
+			'head-tmp': head,
+			'left-tmp': left,
+			'footer-tmp': footer
+		}
+	})
+</script>
+
+</body>
+</html>

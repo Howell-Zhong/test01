@@ -1,0 +1,170 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>后台管理 - 易买网</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function-manage.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/user.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+			<div id="main" class="wrap">
+				<div id="menu-mng" class="lefter">
+					<!-- 此处添加组件left -->
+					<left-tmp></left-tmp>
+				</div>
+
+				<!-- 此处为动态数据，无法提取组件 -->
+				<div class="main">
+					<h2>修改订单</h2>
+					<div class="manage">
+						<form action="manage-result.html">
+							<table class="form">
+								<tr>
+									<td class="field">收货人姓名：</td>
+									<td><input type="text" class="text" v-model="UserShipping.esaConsignee" />
+									</td>
+								</tr>
+								<tr>
+									<td class="field">收货人电话：</td>
+									<td><input type="text" class="text" v-model="UserShipping.esaMobile"/></td>
+								</tr>
+								<tr>
+									<td class="field">收货地址：</td>
+								</tr>
+								<tr>
+									<td class="field">省份：</td>
+									<td><input type="text" class="text" v-model="UserShipping.esaProvince"/></td>
+								</tr>
+								<tr>
+									<td class="field">市：</td>
+									<td><input type="text" class="text" v-model="UserShipping.esaCity"/></td>
+								</tr>
+								<tr>
+									<td class="field">区/县：</td>
+									<td><input type="text" class="text" v-model="UserShipping.esaCounty"/></td>
+								</tr>
+								<tr>
+									<td class="field">详细地址：</td>
+									<td><input type="text" class="text" v-model="UserShipping.esaDetailedAddress"/></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td><label class="ui-blue"><input type="button" value="更新" v-on:click="updateUserShipping"/>
+
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+
+				<!-- 下面这个好像没用 -->
+				<div class="clear"></div>
+			</div>
+
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+
+		<script>
+			var url_esaId = getUrlParam("esaId");
+			var vm = new Vue({
+				el: '#app',
+				data: {
+					current: '4',
+					userName: '',
+					esaId: url_esaId,
+					euId: '6',
+					UserShipping: {
+						esaConsignee: '',
+						esaMobile: '',
+						esaProvince: '',
+						esaCity: '',
+						esaCounty: '',
+						esaDetailedAddress: ''
+					}
+					},
+					methods: {
+						getUserShippingById: function (esaId) {
+
+							axios.get(
+									server_url + '/user/getUserShippingById',
+									{
+										params: {
+											esaId: esaId
+										}
+									}
+							).then(res => {
+								this.UserShipping = res.data;
+							}).catch(err => {
+								console.log(err);
+							})
+						},
+						updateUserShipping: function () {
+							var formData = new FormData();
+							formData.append("esaId", this.esaId);
+							formData.append("euId", this.euId);
+							formData.append("esaConsignee", this.UserShipping.esaConsignee);
+							formData.append("esaMobile", this.UserShipping.esaMobile);
+							formData.append("esaProvince", this.UserShipping.esaProvince);
+							formData.append("esaCity", this.UserShipping.esaCity);
+							formData.append("esaCounty", this.UserShipping.esaCounty);
+							formData.append("esaDetailedAddress", this.UserShipping.esaDetailedAddress);
+							axios.post(
+									server_url + '/user/updateUserShipping',
+									formData,
+									{
+										headers: {'Content-Type': 'application/json'}
+									}
+							).then(res => {
+								window.location.href = "address.html";
+							}).catch(err => {
+								console.log(err);
+							})
+						}
+					},
+				mounted: function() { //mounted函数在页面加载时执行
+					//判断是否登录了
+					if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+						var user = JSON.parse(sessionStorage.getItem("userMsg"));
+						//判断账号是否被禁用
+						if (null != user.euStatus && user.euStatus == "1") {
+							//判断账号是否有用户名
+							if (null != user.euUserName) {
+								//取出用户名放在header
+								this.userName = user.euUserName;
+								//取出用户信息方便修改的时候传参
+								this.address.euId = user.euId;
+							} else {
+								window.location.href = "../shop/login.html"
+							}
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+
+
+
+				},
+				//注册组件
+				components: {
+					'head-tmp': head,
+					'left-tmp': left,
+					'footer-tmp': footer
+				}
+			})
+		</script>
+
+	</body>
+</html>

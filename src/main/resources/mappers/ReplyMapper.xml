@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.ReplyMapper">
+    <!--统计总条数-->
+    <select id="getReplyCount" resultType="int" parameterType="com.jt99.myeasybuy.query.ReplyQuery">
+        select count(erId)
+        from easybuy_reply
+    </select>
+
+    <!--条件分页查-->
+    <select id="getReplyListBy" resultType="com.jt99.myeasybuy.entity.Reply"
+            parameterType="com.jt99.myeasybuy.query.ReplyQuery">
+        SELECT erId,
+               ecId,
+               euId,
+               erReplyTime,
+               erReplyContent
+        FROM easybuy_reply limit #{startIndex},#{pageSize}
+    </select>
+
+    <!--查所有-->
+    <select id="getReplyList" resultType="com.jt99.myeasybuy.entity.Reply">
+        SELECT erId,
+               ecId,
+               euId,
+               erReplyTime,
+               erReplyContent
+        FROM easybuy_reply;
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addReply">
+        INSERT INTO easybuy_reply (erId, ecId, euId, erReplyTime, erReplyContent)
+        VALUES (#{erId}, #{ecId}, #{euId}, #{erReplyTime}, #{erReplyContent});
+    </insert>
+
+    <!--删-->
+    <delete id="deleteReplyById">
+        DELETE
+        FROM easybuy_reply
+        WHERE erId = #{erId};
+    </delete>
+
+    <!--改-->
+    <update id="updateReply">
+        UPDATE easybuy_reply
+        SET erReplyTime=#{erReplyTime},
+            erReplyContent=#{erReplyContent}
+        WHERE erId = #{erId};
+    </update>
+
+    <!--查单个-->
+    <select id="getReplyById" resultType="com.jt99.myeasybuy.entity.Reply">
+        SELECT erId,
+               ecId,
+               euId,
+               erReplyTime,
+               erReplyContent
+        FROM easybuy_reply
+        WHERE erId = #{erId};
+    </select>
+
+    <!--删多个-->
+    <delete id="deleteReplysByIds">
+        delete
+        from easybuy_reply
+        where erId in #{ids};
+    </delete>
+
+</mapper>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.OrderDetailMapper">
+
+    <resultMap type="com.jt99.myeasybuy.entity.vo.OrderDetailVo" id="orderDetailResultMap">
+        <id column="eodId" property="eodId"/>
+        <result column="eodQuantity" property="eodQuantity"/>
+        <collection property="productList" ofType="com.jt99.myeasybuy.entity.Product" column="epId">
+            <id column="epId" property="epId"/>
+            <result column="epFileName" property="epFileName"/>
+            <result column="epName" property="epName"/>
+            <result column="epPrice" property="epPrice"/>
+        </collection>
+    </resultMap>
+
+    <select id="getOrderDetail" parameterType="int" resultMap="orderDetailResultMap">
+        select  eod.eodId,eod.eodQuantity,ep.epName,ep.epPrice,ep.epFileName,ep.epId
+        from easybuy_order_detail eod
+        inner join
+            easybuy_order eo
+            ON eod.`eoId` = eo.`eoId`
+        inner join
+            easybuy_product ep
+        on eod.epId = ep.epId
+        WHERE eo.`eoId` = #{eoId}
+    </select>
+
+
+    <!--统计总条数-->
+    <select id="getOrderDetailCount" resultType="int" parameterType="com.jt99.myeasybuy.query.OrderDetailQuery">
+        select count(eodId)
+        from easybuy_order_detail
+    </select>
+
+    <!--条件分页查-->
+    <select id="getOrderDetailListBy" resultType="com.jt99.myeasybuy.entity.OrderDetail"
+            parameterType="com.jt99.myeasybuy.query.OrderDetailQuery">
+        SELECT eodId,
+               epId,
+               eoId,
+               eodQuantity
+        FROM easybuy_order_detail limit #{startIndex},#{pageSize}
+    </select>
+
+
+    <!--查所有-->
+    <select id="getOrderDetailList" resultType="com.jt99.myeasybuy.entity.OrderDetail">
+        SELECT eodId,
+               epId,
+               eoId,
+               eodQuantity
+        FROM easybuy_order_detail;
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addOrderDetail">
+        INSERT INTO easybuy_order_detail (eodId, epId, eoId, eodQuantity)
+        VALUES (#{eodId}, #{epId}, #{eoId}, #{eodQuantity});
+    </insert>
+
+    <!--删-->
+    <delete id="deleteOrderDetailById">
+        DELETE
+        FROM easybuy_order_detail
+        WHERE eodId = #{eodId};
+    </delete>
+
+    <!--改-->
+    <update id="updateOrderDetail">
+        UPDATE easybuy_order_detail
+        SET epId=#{epId},
+            eoId=#{eoId},
+            eodQuantity=#{eodQuantity}
+        WHERE eodId = #{eodId};
+    </update>
+
+    <!--查单个-->
+    <select id="getOrderDetailById" resultType="com.jt99.myeasybuy.entity.OrderDetail">
+        SELECT eodId,
+               epId,
+               eoId,
+               eodQuantity
+        FROM easybuy_order_detail
+        WHERE eodId = #{eodId};
+    </select>
+
+    <!--删多个-->
+    <delete id="deleteOrderDetailsByIds">
+        delete
+        from easybuy_order_detail
+        where eodId in #{ids};
+    </delete>
+</mapper>

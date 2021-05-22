@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.ProductMapper">
+
+    <select id="getProductAll" resultType="com.jt99.myeasybuy.entity.Product">
+        select * from easybuy_product;
+    </select>
+
+    <insert id="addProduct" parameterType="com.jt99.myeasybuy.entity.Product">
+        insert into easybuy_product(`epcId`,`epName`,`epFileName`,`epPrice`,`epPromotionCategory`,
+                                    `epStatus`,`epStock`,`epDescription`)
+                values (#{epcId},#{epName},#{epFileName},#{epPrice},#{epPromotionCategory},
+                        #{epStatus},#{epStock},#{epDescription});
+    </insert>
+
+    <delete id="deleteProduct" parameterType="int">
+        delete from easybuy_product where epId = #{epId};
+    </delete>
+
+    <sql id="commonSql">
+        <if test="epcId != null">
+            epcId = #{epcId},
+        </if>
+        <if test="epName != null and epName != ''">
+            epName = #{epName},
+        </if>
+        <if test="epFileName != null  and epFileName != ''">
+            `epFileName` = #{epFileName},
+        </if>
+        <if test="epPromotionCategory != null ">
+            epPromotionCategory = #{epPromotionCategory},
+        </if>
+        <if test="epStatus != null">
+            epStatus = #{epStatus},
+        </if>
+        <if test="epStock != null">
+            epStock = #{epStock},
+        </if>
+        <if test="epPrice != null">
+            epPrice = #{epPrice},
+        </if>
+        <if test="epDescription != null and epDescription != ''">
+            epDescription = #{epDescription},
+        </if>
+    </sql>
+
+    <!-- 修改商品 -->
+    <update id="updateProduct" parameterType="com.jt99.myeasybuy.entity.Product">
+        update easybuy_product
+        <set>
+            <include refid="commonSql"></include>
+        </set>
+        where epId = #{epId}
+    </update>
+
+    <!-- 查询条数 -->
+    <select id="getTotalCount" parameterType="com.jt99.myeasybuy.query.ProductQuery" resultType="int">
+        select count(1) from easybuy_product ep
+        left join easybuy_product_category epc on ep.epcId = epc.epcId
+        <where>
+            <if test="epId != null">
+                and ep.epId = #{epId}
+            </if>
+            <if test="epcId != null">
+                and ep.epcId = #{epcId}
+            </if>
+            <if test="epName != null and epName != ''">
+                and ep.epName like concat('%' ,#{epName}, '%')
+            </if>
+            <if test="epFileName != null  and epFileName != ''">
+                and ep.`epFileName` = #{epFileName}
+            </if>
+            <if test="epPromotionCategory != null ">
+                and ep.epPromotionCategory = #{epPromotionCategory}
+            </if>
+            <if test="epStatus != null">
+                and ep.epStatus = #{epStatus}
+            </if>
+            <if test="epStock != null">
+                and ep.epStock = #{epStock}
+            </if>
+            <if test="epPriceLow != null">
+                and ep.epPrice <![CDATA[ >= ]]> #{epPriceLow}
+            </if>
+            <if test="epPriceHigh != null">
+                and ep.epPrice <![CDATA[ <= ]]> #{epPriceHigh}
+            </if>
+            <if test="epcFatherId != null">
+                and epc.epcFatherId = #{epcFatherId}
+            </if>
+            <if test="epDescription != null and epDescription != ''">
+                and epDescription like concat('%' ,#{epDescription}, '%')
+            </if>
+        </where>
+    </select>
+
+    <!-- 条件查询 -->
+    <select id="getProductByPage" parameterType="com.jt99.myeasybuy.query.ProductQuery" resultType="com.jt99.myeasybuy.entity.Product">
+        select * from easybuy_product
+        <where>
+            <if test="epId != null">
+               and epId = #{epId}
+            </if>
+            <if test="epcId != null">
+                and epcId = #{epcId}
+            </if>
+            <if test="epName != null and epName != ''">
+                and epName like concat('%' ,#{epName}, '%')
+            </if>
+            <if test="epFileName != null  and epFileName != ''">
+                and `epFileName` = #{epFileName}
+            </if>
+            <if test="epPromotionCategory != null ">
+                and epPromotionCategory = #{epPromotionCategory}
+            </if>
+            <if test="epStatus != null">
+                and epStatus = #{epStatus}
+            </if>
+            <if test="epStock != null">
+                and epStock = #{epStock}
+            </if>
+            <if test="epPriceLow != null">
+                and ep.epPrice <![CDATA[ >= ]]> #{epPriceLow}
+            </if>
+            <if test="epPriceHigh != null">
+                and ep.epPrice <![CDATA[ <= ]]> #{epPriceHigh}
+            </if>
+            <if test="epDescription != null and epDescription != ''">
+                and  epDescription like concat('%' ,#{epDescription}, '%')
+            </if>
+        </where>
+        limit #{pageStart}, #{pageSize};
+    </select>
+
+    <!-- 根据Id查询商品 -->
+    <select id="getProductById" parameterType="int" resultType="com.jt99.myeasybuy.entity.Product">
+        select * from easybuy_product
+        where epId = #{epId};
+    </select>
+
+    <!-- 根据商品状态获取商品信息 -->
+    <select id="getProductByPromotionCategory" parameterType="String" resultType="com.jt99.myeasybuy.entity.Product">
+        select * from easybuy_product
+        <where>
+            <if test="epPromotionCategory != null and epPromotionCategory != ''">
+               and epPromotionCategory = #{epPromotionCategory}
+            </if>
+        </where>
+    </select>
+
+
+
+    <!-- 根据商品分类表联查商品表 -->
+    <select id="getProductByProductClass" resultType="com.jt99.myeasybuy.entity.Product" parameterType="com.jt99.myeasybuy.query.ProductQuery">
+        select * from easybuy_product ep
+        left join easybuy_product_category epc on ep.epcId = epc.epcId
+        <where>
+            <if test="epId != null">
+                and ep.epId = #{epId}
+            </if>
+            <if test="epcId != null">
+                and ep.epcId = #{epcId}
+            </if>
+            <if test="epName != null and epName != ''">
+                and ep.epName like concat('%' ,#{epName}, '%')
+            </if>
+            <if test="epFileName != null  and epFileName != ''">
+                and ep.`epFileName` = #{epFileName}
+            </if>
+            <if test="epPromotionCategory != null ">
+                and ep.epPromotionCategory = #{epPromotionCategory}
+            </if>
+            <if test="epStatus != null">
+                and ep.epStatus = #{epStatus}
+            </if>
+            <if test="epStock != null">
+                and ep.epStock = #{epStock}
+            </if>
+            <if test="epPriceLow != null">
+                and ep.epPrice <![CDATA[ >= ]]> #{epPriceLow}
+            </if>
+            <if test="epPriceHigh != null">
+                and ep.epPrice <![CDATA[ <= ]]> #{epPriceHigh}
+            </if>
+            <if test="epcFatherId != null">
+                and epc.epcFatherId = #{epcFatherId}
+            </if>
+            <if test="epDescription != null and epDescription != ''">
+                and  ep.epDescription like concat('%' ,#{epDescription}, '%')
+            </if>
+        </where>
+        limit #{pageStart}, #{pageSize};
+    </select>
+</mapper>

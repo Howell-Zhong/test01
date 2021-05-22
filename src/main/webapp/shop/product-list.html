@@ -1,0 +1,364 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>易买网 - 首页</title>
+	<link type="text/css" rel="stylesheet" href="../css/style.css" />
+	<script type="text/javascript" src="../scripts/function.js"></script>
+	<script type="text/javascript" src="../scripts/jquery-1.12.4.js"></script>
+	<script type="text/javascript" src="../scripts/vue.js"></script>
+	<script type="text/javascript" src="../scripts/shop.js"></script>
+	<script type="text/javascript" src="../scripts/param.js"></script>
+	<script type="text/javascript" src="../scripts/server_url.js"></script>
+	<script type="text/javascript" src="../scripts/axios.min.js"></script>
+	<script type="text/javascript" src="../scripts/pageTemplate.js"></script>
+</head>
+
+<body>
+	<div id="app">
+		<!-- 此处添加组件head -->
+		<head-tmp v-bind:cnum="num"></head-tmp>
+		<div id="childNav">
+			<div class="wrap">
+				<!-- 此处添加时间组件 -->
+				<time-tmp v-bind:user="userName"></time-tmp>
+			</div>
+		</div>
+		<div id="position" class="wrap">
+			您现在的位置：<a href="index.html">易买网</a> &gt; <a v-bind:href="'product-list.html?epcFatherId='+productClass.epcFatherId">{{productClass | doFilterProductClss(productClass)}}</a> &gt; {{productClass.epcName}}
+		</div>
+		<div id="main" class="wrap">
+			<div class="lefter">
+				<left-tmp></left-tmp>
+				<div class="spacer"></div>
+				<!-- 最近浏览组件 -->
+				<lastview-tmp></lastview-tmp>
+			</div>
+			<div class="main">
+				<div class="product-list">
+					<h2>全部商品</h2>
+					<div>
+						<!-- 绑定点击事件 绑定数据 -->
+						<page-tmp v-on:dogopage="doPage" v-on:query="doQuery" v-bind:cpage="page"></page-tmp>
+					</div>
+					<div class="clear"></div>
+					<div class="search">
+						<form method="get">
+							商品名称<input type="text" class="text" name="epName" v-model="epName" />
+							商品价格<input type="text" name="epPriceLow" v-model="productQuery.epPriceLow" size="5px" placeholder="￥"/>
+							-<input type="text" name="epPriceHigh" v-model="productQuery.epPriceHigh" size="5px" placeholder="￥"/>
+								 <label class="ui-blue"><input type="button" name="check"
+									value="查询" v-on:click="doQuery(1)" /></label>
+						</form>
+					</div>
+					<ul class="product clearfix">
+						<li v-for="(item, index) in page.list">
+							<dl>
+								<dt><a v-bind:href="'product-view.html?epId='+item.epId" target="_blank" rel="opener">
+									<img v-bind:src="item.epFileName | doPictureFilter(item.epFileName)" /></a>
+								</dt>
+								<dd class="title">
+									<a v-bind:href="'product-view.html?epId='+item.epId" target="_blank" rel="opener">{{item.epName}}</a>
+								</dd>
+								<dd class="price">￥{{item.epPrice}}</dd>
+							</dl>
+						</li>
+					</ul>
+					<div class="clear"></div>
+					<div>
+						<!-- 绑定点击事件 绑定数据 -->
+						<page-tmp v-on:dogopage="doPage" v-on:query="doQuery" v-bind:cpage="page"></page-tmp>
+					</div>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<footer-tmp></footer-tmp>
+	</div>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				num: '',
+				userName:'',
+				epcId:'',
+				epcFatherId: '',
+				epName: '',
+				page: {
+					list: '',
+					totalCount: '',
+					totalPage: '',
+					pageNo: '',
+					pageSize: ''
+				},
+				productQuery: {
+					epId: '',
+					epcId: '',
+					epName: '',
+					epcFatherId: '',
+					epPromotionCategory: '',
+					epPrice: '',
+					epStock: '',
+					epStatus: '',
+					epPriceLow: '',
+					epPriceHigh: ''
+				},
+				productClass:{
+					epcFatherId: '',
+					epcId: '',
+					epcName:''
+				},
+				products: []
+			},
+			methods: {
+				// 页面跳转
+				doPage: function (pageNo) {
+					if (pageNo == null || pageNo == '' || isNaN(pageNo)
+						|| pageNo > this.page.totalPage || pageNo < 1
+					) {
+						alert("页码不符合！");
+					} else {
+						this.doQuery(pageNo);
+					}
+				},
+				doQuery: function (pageNo) {
+
+					this.num = getUrlParam("num");
+					this.epcFatherId = getUrlParam("epcFatherId");
+
+					switch (this.num) {
+						case '01':
+							this.epcFatherId = 2;
+							break;
+						case '02':
+							this.epcId = 4;
+							break;
+						case '03':
+							this.epcId = 5;
+							break;	
+						case '07':
+							this.epcFatherId = 3;
+							break;
+						case '05':
+							this.epcFatherId = 1;
+							break		
+						case '08':
+							this.epcId = 7;
+							break;
+						case '09':
+							this.epcId = 8;
+							break;
+						case '10':
+							this.epcId = 9;
+							break;
+						case '12':
+							this.epcId = 10;
+							break;
+						case '13':
+							this.epcId = 11;
+							break;
+						case '14':
+							this.epcId = 12;
+							break;
+						case '15':
+							this.epcId = 13;
+							break;
+						case '16':
+							this.epcId = 14;
+							break;
+						case '17':
+							this.epcId = 15;
+							break;
+						case '18':
+							this.epcId = 16;
+							break;
+						case '19':
+							this.epcId = 17;
+							break;
+						case '20':
+							this.epcId = 18;
+							break;
+						case '21':
+							this.epcId = 19;
+							break;
+						case '22':
+							this.epcId = 20;
+							break;
+						case '23':
+							this.epcId = 22;
+							break;
+						case '24':
+							this.epcId = 23;
+							break;	
+
+					}
+					if(this.epcId == 2 || this.epcId == 3 || this.epcId == 1){
+						this.epcId = '';
+					}
+					console.log("分类id?"+this.epcId);
+					console.log("商品名称："+this.productQuery.epName);
+						// 分页查询
+					axios.get(
+						server_url + '/product/getProductByProductClass',
+						{
+							params: {
+								epcId: this.epcId,
+								epcFatherId: this.epcFatherId,
+								epPriceLow: this.productQuery.epPriceLow,
+								epPriceHigh: this.productQuery.epPriceHigh,
+								epName: this.epName,
+								pageNo: pageNo,
+								pageSize: 20,
+							}
+						}
+					).then(
+						res => {
+							console.log(res.data);
+							this.page = res.data.t;
+							console.log(this.page.list);
+						}
+					).catch(err => {
+						console.log(err);
+					});
+					// }
+				},
+
+				// 获取当前分类
+				doProductClass:function(){
+					this.num = getUrlParam("num");
+
+					switch (this.num) {
+						case '01':
+							this.epcId = 2;
+							break;
+						case '02':
+							this.epcId = 4;
+							break;
+						case '03':
+							this.epcId = 5;
+							break;	
+						case '05':
+							this.epcId = 1;
+							break	
+						case '07':
+							this.epcId = 3;
+							break;	
+						case '08':
+							this.epcId = 7;
+							break;
+						case '09':
+							this.epcId = 8;
+							break;
+						case '10':
+							this.epcId = 9;
+							break;
+						case '12':
+							this.epcId = 10;
+							break;
+						case '13':
+							this.epcId = 11;
+							break;
+						case '14':
+							this.epcId = 12;
+							break;
+						case '15':
+							this.epcId = 13;
+							break;
+						case '16':
+							this.epcId = 14;
+							break;
+						case '17':
+							this.epcId = 15;
+							break;
+						case '18':
+							this.epcId = 16;
+							break;
+						case '19':
+							this.epcId = 17;
+							break;
+						case '20':
+							this.epcId = 18;
+							break;
+						case '21':
+							this.epcId = 19;
+							break;
+						case '22':
+							this.epcId = 20;
+							break;
+						case '23':
+							this.epcId = 22;
+							break;
+						case '24':
+							this.epcId = 23;
+							break;		
+					}
+
+					if(this.epcId != null || this.epcId != ''){
+						axios.get(
+						server_url + '/productClass/getProductClassById',
+						{
+							params:{epcId:this.epcId}
+						}
+					).then(res=>{
+						this.productClass = res.data.t;
+						console.log(this.productClass);
+					}).catch(err=>{
+						console.log(err);
+					});
+					}
+				}
+
+			},
+			filters: {
+				// 图片显示
+				doPictureFilter: function (epFileName) {
+					return server_url + epFileName;
+				},
+				// 分类显示
+				doFilterProductClss(productClass){
+					if(productClass.epcId == 2 || productClass.epcFatherId == 2){
+						return '图书音像';
+					}else if(productClass.epcId ==3 || productClass.epcFatherId == 3){
+						return '百货';
+					}else if(productClass.epcId ==1 || productClass.epcFatherId == 1){
+						return '医疗保健';
+					}
+				},
+				// 名字过滤
+				doNameFilter:function(epName){
+					var ep_Name = epName;
+					ep_Name = ep_Name.substring(0,8);
+					return ep_Name + "...";
+				}
+			},
+			components: {
+				'head-tmp': head,
+				'left-tmp': left,
+				'page-tmp': pageTmp,
+				'footer-tmp': footer,
+				'time-tmp': time,
+				'lastview-tmp': lastView
+			},
+			mounted() {
+				// 取出本地缓存->最近浏览
+				if(localStorage.getItem("recent") != null && localStorage.getItem("recent") != '' ){
+
+					this.products = JSON.parse(localStorage.getItem("recent"));
+					console.log("缓存取出"+this.products);
+				}
+
+				// 执行查询
+				this.doQuery(1);
+				this.doProductClass();
+				
+				
+				
+			
+			},
+		});
+	</script>
+</body>
+
+</html>

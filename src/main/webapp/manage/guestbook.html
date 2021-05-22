@@ -1,0 +1,234 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>后台管理 - 易买网</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function-manage.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/navigation.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+		<script type="text/javascript" src="../scripts/pageTemplate.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+			<div id="main" class="wrap">
+				<div id="menu-mng" class="lefter">
+					<!-- 此处添加组件left -->
+					<left-tmp></left-tmp>
+				</div>
+
+				<!-- 此处为动态数据，无法提取组件 -->
+				<div class="main">
+					<h2>留言管理</h2>
+					</br>
+					<table class="search-tab">
+						<tr>
+							<th width="50">性别:</th>
+							<td width="30">
+								<select name="search-sort" v-model="commentQuery.euSex">
+									<option value="">全部</option>
+									<option value="1">男</option>
+									<option value="2">女</option>
+								</select>
+							</td>
+							<th width="50">状态:</th>
+							<td width="30">
+								<select name="search-sort" v-model="commentQuery.erId">
+									<option value="1">全部</option>
+									<option value="2">已回复</option>
+									<option value="3">未回复</option>
+								</select>
+							</td>
+							
+							<th width="70">用户名:</th>
+							<td width="50"><input class="common-text" placeholder="用户名" name="euUserName" value="" id=""
+									type="text" v-model="commentQuery.euUserName" size="10"/>
+							</td>
+							<th width="70">姓名:</th>
+							<td width="50"><input class="common-text" placeholder="姓名" name="euName" value="" id=""
+									type="text" v-model="commentQuery.euName"  size="10" />
+							</td>
+					
+							<td>&nbsp;</td>
+							<td>
+								<input class="btn btn-primary btn2" name="sub" value="查询" type="button"
+									v-on:click="doQuery(1)" />
+							</td>
+						</tr>
+					</table>
+					<div class="manage">
+						
+						<table class="list">
+							<tr>
+								<th>留言ID</th>
+								<th>用户名</th>
+								<th>姓名</th>
+								<th>留言内容</th>
+								<th>状态</th>
+								<th>操作</th>
+							</tr>
+							<tbody v-for="item in commentPage.list">
+								<tr>
+									<td class="first w4 c">{{item.ecId}}</td>
+									<td class="w1 c">{{item.user.euUserName}}</td>
+									<td class="w1 c">{{item.user.euName}}</td>
+									<td>{{item.ecContent}}</td>
+									<td class="w1 c">{{null==item.reply?"未回复":"已回复"}}</td>
+									<td class="w1 c">
+									
+										<a href="javascript:void(0)" v-on:click="doReply(item)">查看/回复</a>
+										<a href="javascript:void(0)" v-on:click="doDelete(item.ecId)">删除</a>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						<div class="pager">
+							<page-tmp v-on:query="doQuery" v-on:gopage="doGoPage" v-bind:cpage="commentPage"></page-tmp>
+						</div>
+					</div>
+				</div>
+
+				<!-- 下面这个好像没用 -->
+				<div class="clear"></div>
+			</div>
+
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+
+
+		<script>
+			var vm = new Vue({
+				el: '#app',
+				data: {
+					current: '5',
+					userName: '',
+					user:{},
+					commentPage: {},
+					commentQuery: {
+						euUserName: '',
+						euSex: '',
+						euName:'',
+						erId:'1'
+					}
+				},
+				methods:{
+					//分页
+					doQuery: function(pageNo) {
+						axios.get(
+							server_url + '/comment/getCommentInnerListBy', {
+								params: {
+									pageNo: pageNo,
+									pageSize: 6,
+									euUserName:this.commentQuery.euUserName,
+									euSex:this.commentQuery.euSex,
+									euName:this.commentQuery.euName,
+									erId:parseInt(this.commentQuery.erId)
+								}
+							}
+						).then(res => {
+							console.log(res.data.t)
+							this.commentPage = res.data.t;
+					
+						}).catch(err => {
+							console.log(err);
+						});
+					},
+					//跳转
+					doGoPage: function(pageNo) {
+						//pageNo的值来自于分页条组件
+						//点击go按钮前需要对输入的页码进行判断验证,合法的页码才能请求
+						if (pageNo == null || pageNo == '' || isNaN(pageNo) || pageNo <= 0 || pageNo > this
+							.commentPage.totalPage) {
+							alert("页码不合法,请重新输入");
+							return;
+						}
+						//页码合法后调用上面的doQuery(pageNo)方法
+						this.doQuery(pageNo);
+					},
+					doReply:function(item){
+						var comment = JSON.stringify(item);
+						sessionStorage.setItem("comment",comment);
+						window.location.href ="guestbook-modify.html"
+					},
+					doDelete:function(ecId){
+						axios.get(
+							server_url + '/comment/deleteCommentById', {
+								params: {
+									ecId:ecId
+								}
+							}
+						).then(res => {
+							window.location.href = "manage-result.html"	
+						}).catch(err => {
+							console.log(err);
+						});
+					}
+				},
+				filters: {
+					// 图片显示
+					doPictureFilter: function(euPicture) {
+						return server_url + euPicture;
+					},
+					// 时间显示
+					doTimeFilter: function(timeStamp) {
+						let year = new Date(timeStamp).getFullYear();
+						let month = new Date(timeStamp).getMonth() + 1 < 10 ? "0" + (new Date(timeStamp).getMonth() +
+								1) :
+							new Date(timeStamp).getMonth() + 1;
+						let date = new Date(timeStamp).getDate() < 10 ? "0" + new Date(timeStamp).getDate() :
+							new Date(
+								timeStamp).getDate();
+						let hh = new Date(timeStamp).getHours() < 10 ? "0" + new Date(timeStamp).getHours() :
+							new Date(
+								timeStamp).getHours();
+						let mm = new Date(timeStamp).getMinutes() < 10 ? "0" + new Date(timeStamp).getMinutes() :
+							new Date(
+								timeStamp).getMinutes();
+						let ss = new Date(timeStamp).getSeconds() < 10 ? "0" + new Date(timeStamp).getSeconds() :
+							new Date(
+								timeStamp).getSeconds();
+						var nowTime = year + "年" + month + "月" + date + "日" + " " + hh + ":" + mm + ':' + ss;
+						return nowTime;
+					}
+				},
+				mounted: function() { //mounted函数在页面加载时执行
+					//判断用户是否登录
+					if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+						//sessionStorage中保存的字符串转成对象
+						var user = JSON.parse(sessionStorage.getItem("userMsg"));
+						//判断是不是管理员
+						if (null != user.euType && user.euType == "2") {
+							//判断用户名为不为空
+							if (null != user.euUserName) {
+								//判断都成功则进行赋值
+								this.userName = user.euUserName;
+								this.user = user;
+								this.doQuery(1);
+							} else {
+								window.location.href = "../shop/login.html"
+							}
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+				},
+				//注册分页条组件
+				components: {
+					'head-tmp': head,
+					'left-tmp': left,
+					'footer-tmp': footer,
+					'page-tmp': pageTmp
+				}
+			})
+		</script>
+	</body>
+</html>

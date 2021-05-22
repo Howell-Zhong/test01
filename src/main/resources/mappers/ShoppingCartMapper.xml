@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.ShoppingCartMapper">
+    <!--统计总条数-->
+    <select id="getShoppingCartCount" resultType="int" parameterType="com.jt99.myeasybuy.query.ShoppingCartQuery">
+        select count(escId)
+        from easybuy_shopping_cart
+        WHERE euId = #{euId};
+    </select>
+
+    <!--条件分页查-->
+    <select id="getShoppingCartListBy" resultType="com.jt99.myeasybuy.entity.ShoppingCart"
+            parameterType="com.jt99.myeasybuy.query.ShoppingCartQuery">
+        SELECT escId,
+               epId,
+               euId,
+               escQuantity
+        FROM easybuy_shopping_cart limit #{startIndex},#{pageSize}
+    </select>
+    
+
+    <!--查所有-->
+    <select id="getShoppingCartList" resultType="com.jt99.myeasybuy.entity.ShoppingCart">
+        SELECT escId,
+               epId,
+               euId,
+               escQuantity
+        FROM easybuy_shopping_cart;
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addShoppingCart">
+        INSERT INTO easybuy_shopping_cart (escId, epId, euId, escQuantity)
+        VALUES (#{escId}, #{epId}, #{euId}, #{escQuantity});
+    </insert>
+
+    <!--删-->
+    <delete id="deleteShoppingCartById">
+        DELETE
+        FROM easybuy_shopping_cart
+        WHERE escId = #{escId};
+    </delete>
+
+    <!--购物车结算后，根据用户ID删除改用户所有结算的购物车-->
+    <delete id="deleteShoppingCartByEuId">
+        DELETE
+        FROM easybuy_shopping_cart
+        WHERE euId = #{euId};
+    </delete>
+
+    <!--改-->
+    <update id="updateShoppingCart">
+        UPDATE easybuy_shopping_cart
+        SET escQuantity=#{escQuantity}
+        WHERE escId = #{escId};
+    </update>
+
+    <!--查单个-->
+    <select id="getShoppingCartById" resultType="com.jt99.myeasybuy.entity.ShoppingCart">
+        SELECT escId,
+               epId,
+               euId,
+               escQuantity
+        FROM easybuy_shopping_cart
+        WHERE escId = #{escId};
+    </select>
+
+    <!--根据用户查他的所有购物车-->
+    <select id="getCartsByEuId" resultType="com.jt99.myeasybuy.entity.ShoppingCart">
+        SELECT escId,
+               epId,
+               euId,
+               escQuantity
+        FROM easybuy_shopping_cart
+        WHERE euId = #{euId};
+    </select>
+
+    <!--分页连表查-->
+    <resultMap id="resultMap1" type="com.jt99.myeasybuy.entity.ShoppingCart">
+        <id column="column01" property="escId"/>
+        <result column="column02" property="epId"/>
+        <result column="column03" property="euId"/>
+        <result column="column04" property="escQuantity"/>
+        <!-- association标签用于映射ShoppingCart类中的product属性, property="product属性名" -->
+        <association property="product" javaType="com.jt99.myeasybuy.entity.Product">
+            <id column="column11" property="epId"/>
+            <result column="column12" property="epcId"/>
+            <result column="column13" property="epName"/>
+            <result column="column14" property="epFileName"/>
+            <result column="column15" property="epPrice"/>
+            <result column="column16" property="epPromotionCategory"/>
+            <result column="column17" property="epStatus"/>
+            <result column="column18" property="epBrand"/>
+            <result column="column19" property="epStock"/>
+            <result column="column20" property="barcode"/>
+            <result column="column21" property="epDescription"/>
+        </association>
+    </resultMap>
+
+    <!--根据用户ID连表查出用户购物车中的商品-->
+    <select id="getShoppingCartByEuId" resultMap="resultMap1" parameterType="com.jt99.myeasybuy.query.ShoppingCartQuery">
+        SELECT t1.escId column01,
+               t1.epId column02,
+               t1.euId column03,
+               t1.escQuantity column04,
+               t2.epId column11,
+               t2.epcId column12,
+               t2.epName column13,
+               t2.epFileName column14,
+               t2.epPrice column15,
+               t2.epPromotionCategory column16,
+               t2.epStatus column17,
+               t2.epBrand column18,
+               t2.epStock column19,
+               t2.barcode column20,
+               t2.epDescription column21
+        FROM easybuy_shopping_cart t1
+                 inner join easybuy_product t2
+                            on t1.epId = t2.epId
+        WHERE euId = #{euId}
+            limit #{startIndex}, #{pageSize};
+    </select>
+
+    <!--根据用户计算总金额-->
+    <select id="getTotalPriceByEuId" resultMap="resultMap1">
+        SELECT t1.escId column01,
+               t1.epId column02,
+               t1.euId column03,
+               t1.escQuantity column04,
+               t2.epId column11,
+               t2.epcId column12,
+               t2.epName column13,
+               t2.epFileName column14,
+               t2.epPrice column15,
+               t2.epPromotionCategory column16,
+               t2.epStatus column17,
+               t2.epBrand column18,
+               t2.epStock column19,
+               t2.barcode column20,
+               t2.epDescription column21
+        FROM easybuy_shopping_cart t1
+                 inner join easybuy_product t2
+                            on t1.epId = t2.epId
+        WHERE euId = #{euId}
+    </select>
+
+
+    <!--删多个-->
+    <delete id="deleteShoppingCartsByIds">
+        delete
+        from easybuy_shopping_cart
+        where escId in #{ids};
+    </delete>
+
+</mapper>

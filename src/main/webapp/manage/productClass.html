@@ -1,0 +1,102 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>后台管理 - 易买网</title>
+<link type="text/css" rel="stylesheet" href="../css/style.css" />
+<script type="text/javascript" src="../scripts/function-manage.js"></script>
+<script type="text/javascript" src="../scripts/axios.min.js"></script>
+<script type="text/javascript" src="../scripts/vue.js"></script>
+<script type="text/javascript" src="../scripts/navigation.js"></script>
+<script type="text/javascript" src="../scripts/server_url.js"></script>
+<script type="text/javascript" src="../scripts/jquery-1.12.4.js"></script>
+<script type="text/javascript" src="../scripts/server_url.js"></script>
+</head>
+<body>
+<div id="app">
+	<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+	<div id="main" class="wrap">
+		<div id="menu-mng" class="lefter">
+			<left-tmp></left-tmp>
+		</div>
+		<div class="main">
+			<h2>分类管理</h2>
+			<div class="manage">
+				<table class="list">
+					<tr>
+						<th>ID</th>
+						<th>分类名称</th>
+						<th>操作</th>
+					</tr>
+					<tbody v-for="item1 in fatherClass">
+					<tr>
+						<td class="first w4 c">{{item1.epcId}}</td>
+						<td>{{item1.epcName}}</td>
+						<td class="w1 c">
+							<!-- <a v-bind:href="'productClass-modify.html?epcId='+item1.epcId">查看</a>  -->
+							<a v-bind:href="'productClass-modify.html?epcId='+item1.epcId+'&epcFatherId='+item1.epcFatherId">修改</a> 
+							<a href="javascript:void(0);" v-on:click="doDelete(item1.epcId)">删除</a></td>
+					</tr>
+					<!-- 嵌套vue循环 -->
+					<tr v-for="(item2, index) in item1.children" :key="index">
+						<td class="first w4 c">{{item2.epcId}}</td>
+						<td class="childClass">{{item2.epcName}}</td>
+						<td class="w1 c">
+							<!-- <a href="productClass-modify.html">查看</a>  -->
+							<a v-bind:href="'productClass-modify.html?epcId='+item2.epcId+'&epcFatherId='+item1.epcFatherId">修改</a> 
+							<a href="javascript:void(0);" v-on:click="doDelete(item2.epcId)">删除</a></td>
+					</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<footer-tmp></footer-tmp>
+</div>	
+</body>
+<script>
+	var vm = new Vue({
+		el:'#app',
+		data:{
+			current:'2',
+			userName:'',
+			fatherClass:{},
+		},
+		methods: {
+			// 删除
+			doDelete:function(epcId){
+				axios.get(
+					server_url + '/productClass/deleteProductClass',
+					{
+						params:{epcId:epcId}
+					}
+				).then(res=>{
+					alert("删除成功！");
+					window.location.reload();
+				})
+			}
+		},
+		components:{
+			'head-tmp': head,
+			'left-tmp': left,
+			'footer-tmp': footer
+		},
+		mounted() {
+			// 获取父类
+			axios.get(
+				server_url + '/productClass/getProductClassAll',
+			).then(res=>{
+				this.fatherClass = res.data.t;
+				console.log(this.fatherClass);
+				console.log(this.fatherClass[0].children);
+	
+			}).catch(err=>{
+				console.log(err);
+			});
+			
+			
+		},
+	});
+</script>
+</html>

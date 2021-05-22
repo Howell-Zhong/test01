@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.UserShippingMapper">
+    <!-- 用户收货地址总数 -->
+    <select id="getUserShippingCount" resultType="int">
+        SELECT COUNT(euId)
+        FROM easybuy_shipping_address WHERE euid =#{euId} GROUP BY euId
+    </select>
+    <!--  用户收货地址分页查询  -->
+    <select id="getUserShipping" resultType="com.jt99.myeasybuy.entity.UserShipping" parameterType="java.lang.Integer">
+        SELECT  esaId,esaConsignee,esaMobile,esaProvince,esaCity,esaCounty,esaDetailedAddress,esaDefault
+        FROM easybuy_shipping_address
+        WHERE euId=#{euId}
+            limit #{startIndex},#{pageSize}
+
+    </select>
+    <delete id="deleteUserShipping" parameterType="java.lang.Integer">
+        DELETE FROM easybuy_shipping_address WHERE esaId = #{esaId}
+    </delete>
+    <!-- 根据地址编号查询用户收货地址-->
+    <select id="getUserShippingById" resultType="com.jt99.myeasybuy.entity.UserShipping" parameterType="java.lang.Integer">
+        SELECT  esaConsignee,esaMobile,esaProvince,esaCity,esaCounty,esaDetailedAddress
+        FROM easybuy_shipping_address
+        WHERE esaId=#{esaId}
+    </select>
+    <!-- 修改用户收货地址 -->
+    <update id="updateUserShipping" >
+        UPDATE easybuy_shipping_address set esaConsignee=#{esaConsignee},esaMobile=#{esaMobile},esaProvince=#{esaProvince},esaCity=#{esaCity},esaCounty=#{esaCounty},esaDetailedAddress=#{esaDetailedAddress}
+        WHERE esaId=#{esaId}
+    </update>
+    <!-- 增加用户收货地址   -->
+    <insert id="addUserShipping" >
+        INSERT INTO easybuy_shipping_address (euId, esaConsignee, esaMobile, esaProvince, esaCity,esaCounty,esaDetailedAddress,esaDefault)
+        VALUES (#{euId}, #{esaConsignee}, #{esaMobile}, #{esaProvince}, #{esaCity},#{esaCounty},#{esaDetailedAddress},0);
+    </insert>
+    <update id="updateUserEsaDefault">
+        UPDATE easybuy_shipping_address SET esaDefault=0
+        WHERE euId=#{euId} AND esaId != #{esaId};
+
+    </update>
+    <update id="updateUserEsaDefaults">
+        UPDATE easybuy_shipping_address SET esaDefault=1
+        WHERE euId=#{euId} AND esaId=#{esaId};
+    </update>
+</mapper>

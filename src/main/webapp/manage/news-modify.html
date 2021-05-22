@@ -1,0 +1,137 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>后台管理 - 易买网</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function-manage.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/navigation.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+		<script src="//cdn.ckeditor.com/4.16.0/standard/ckeditor.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:num="current" v-bind:user="userName"></head-tmp>
+			<div id="main" class="wrap">
+				<div id="menu-mng" class="lefter">
+					<!-- 此处添加组件left -->
+					<left-tmp></left-tmp>
+				</div>
+
+				<!-- 此处为动态数据，无法提取组件 -->
+				<div class="main">
+					<h2>修改新闻</h2>
+					<div class="manage">
+						<form action="manage-result.html">
+							<table class="form">
+								<tr>
+									<td class="field">新闻标题：</td>
+									<td><input type="text" class="text" name="title" value="" v-model="news.enTitle"/></td>
+								</tr>
+								<tr>
+									<td class="field">新闻内容：</td>
+									<td><textarea name="enContent" class="ckeditor" v-model="news.enContent"></textarea></td>
+								</tr>
+								<tr>
+									<td></td>
+									<td><label class="ui-blue"><input type="button" name="btn" value="修改" v-on:click="doUpdateNews" /></label>
+									</td>
+								</tr>
+							</table>
+						</form>
+					</div>
+				</div>
+
+				<!-- 下面这个好像没用 -->
+				<div class="clear"></div>
+			</div>
+
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+
+		<script>
+			var vm = new Vue({
+				el: '#app',
+				data: {
+					current: '6',
+					userName: '',
+					news:{
+						enTitle: '',
+						enContent: ''
+					}
+				},
+				methods: {
+					// 修改新闻
+					doUpdateNews:function(){
+						alert("是否修改？");
+						// 获取文本内容
+						var en_Content = CKEDITOR.instances.enContent.getData();
+						var enId = getUrlParam("enId");
+						console.log(en_Content);
+						var formData = new FormData();
+						formData.append("enTitle", this.news.enTitle);
+						formData.append("enContent", en_Content);
+						formData.append("enType",'1');
+						formData.append("enId", enId);
+						axios.post(
+							server_url + "/news/updateNews",
+							formData,
+							{
+								Headers:{'Content-Type': 'multipart/form-data'}
+							}
+						).then(res=>{
+							alert("修改成功！");
+							window.location.href="news.html";
+						})
+					}
+				},
+				mounted: function() { //mounted函数在页面加载时执行
+					//判断用户是否登录
+					if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+						//sessionStorage中保存的字符串转成对象
+						var user = JSON.parse(sessionStorage.getItem("userMsg"));
+						//判断是不是管理员
+						if (null != user.euType && user.euType == "2") {
+							//判断用户名为不为空
+							if (null != user.euUserName) {
+								//判断都成功则进行赋值
+								this.userName = user.euUserName
+							} else {
+								window.location.href = "../shop/login.html"
+							}
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+
+					var enId = getUrlParam("enId");
+					// 获取数据
+					axios.get(
+						server_url + "/news/getNewsById",
+						{
+							params:{id:enId}
+						}
+					).then(res=>{
+						this.news = res.data.t;
+						console.log(this.news);
+					})
+					
+				},
+				//注册分页条组件
+				components: {
+					'head-tmp': head,
+					'left-tmp': left,
+					'footer-tmp': footer
+				}
+			})
+		</script>
+	</body>
+</html>

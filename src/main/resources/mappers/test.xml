@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="${namespace}">
+    <!--统计总条数-->
+    <select id="get${Entity}Count" resultType="int" parameterType="${parameterTypeQuery}">
+        select count(testId)
+        from ${table1Name}
+    </select>
+
+    <!--条件分页查-->
+    <select id="get${Entity}ListBy" resultType="${resultType1}" parameterType="${parameterTypeQuery}">
+        SELECT property01, property02, property03, property04, property05, property06, property07, property08, property09, property10
+        FROM ${table1Name}
+        limit #{startIndex},#{pageSize}
+    </select>
+
+    <!--分页连表查-->
+    <resultMap id="resultMap1" type="${resultType1}" >
+        <id column="column01" property="property01" />
+        <result column="column02" property="property02" />
+        <result column="column03" property="property03" />
+        <result column="column04" property="property04" />
+        <result column="column05" property="property05" />
+        <result column="column06" property="property06" />
+        <result column="column07" property="property07"/>
+        <result column="column08" property="property08"/>
+        <result column="column09" property="property09"/>
+        <result column="column10" property="property10"/>
+        <!-- association标签用于映射city类中的province对象的属性名, property="province属性名" -->
+        <association property="type" javaType="${resultType2}">
+            <id column="column11" property="property11"/>
+            <result column="column12" property="property12"/>
+            <result column="column13" property="property13"/>
+            <result column="column14" property="property14"/>
+            <result column="column15" property="property15"/>
+            <result column="column16" property="property16"/>
+            <result column="column17" property="property17"/>
+            <result column="column18" property="property18"/>
+            <result column="column19" property="property19"/>
+        </association>
+    </resultMap>
+
+    <select id="get${Entity}InnerListBy" resultMap="resultMap1">
+        SELECT
+            t1.property01 column01,
+            t1.property02 column02,
+            t1.property03 column03,
+            t1.property04 column04,
+            t1.property05 column05,
+            t1.property06 column06,
+            t1.property07 column07,
+            t1.property08 column08,
+            t1.property09 column09,
+            t1.property10 column10,
+            t2.property11 column11,
+            t2.property12 column12,
+            t2.property13 column13,
+            t2.property14 column14,
+            t2.property15 column15,
+            t2.property16 column16,
+            t2.property17 column17,
+            t2.property18 column18,
+            t2.property19 column19
+        FROM ${table1Name} t1
+        inner join ${table2Name} t2
+        on t1.主键 = t2.外键
+        limit #{startIndex},#{pageSize};
+    </select>
+
+    <!--查所有-->
+    <select id="get${Entity}List" resultType="${resultType1}">
+        SELECT property01, property02, property03, property04, property05, property06, property07, property08, property09, property10
+        FROM ${table1Name};
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="add${Entity}">
+        INSERT INTO ${table1Name} (property01, property02, property03, property04, property05, property06, property07, property08, property09, property10)
+        VALUES (#{property01}, #{property02}, #{property03}, #{property04}, #{property05}, #{property06}, #{property07}, #{property08}, #{property09}, #{property10});
+    </insert>
+
+    <!--删-->
+    <delete id="delete${Entity}ById">
+        DELETE
+        FROM ${table1Name}
+        WHERE testId =#{testId};
+    </delete>
+
+    <!--改-->
+    <update id="update${Entity}">
+        UPDATE ${table1Name}
+        SET property02=#{property02}, property03=#{property03}, property04=#{property04}, property05=#{property05}, property06=#{property06}, property07=#{property07}, property08=#{property08}, property09=#{property09}, property10=#{property10} WHERE testId =#{testId};
+    </update>
+
+    <!--查单个-->
+    <select id="get${Entity}ById" resultType="${resultType1}">
+        SELECT property01, property02, property03, property04, property05, property06, property07, property08, property09, property10 FROM ${table1Name} WHERE testId = #{testId};
+    </select>
+
+    <!--删多个-->
+    <delete id="delete${Entity}sByIds">
+        delete from ${table1Name} where testId in #{ids};
+    </delete>
+
+</mapper>

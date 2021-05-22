@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.OrderShoppingMapper">
+    <resultMap id="OrderShoppingRM" type="com.jt99.myeasybuy.entity.vo.OrderShoppingVo">
+        <id column="eoId" property="eoId"/>
+        <result column="epName" property="epName"/>
+        <result column="eodQuantity" property="eodQuantity"/>
+        <result column="epPrice" property="epPrice"/>
+    </resultMap>
+    <select id="getOrderShoppingMapper" resultMap="OrderShoppingRM" parameterType="int">
+
+SELECT easybuy_order_detail.`eodId`,easybuy_product.`epName`,easybuy_order_detail.`eodQuantity`,easybuy_product.`epPrice` FROM
+easybuy_order_detail INNER JOIN easybuy_product
+ON easybuy_order_detail.`epId` = easybuy_product.`epId`
+WHERE eodId=#{eodId}
+    </select>
+
+</mapper>
+

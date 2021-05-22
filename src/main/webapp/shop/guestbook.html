@@ -1,0 +1,301 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>易买网 - 留言</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/shop.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+		<script type="text/javascript" src="../scripts/pageTemplate.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:cnum="num"></head-tmp>
+
+			<div id="childNav">
+				<div class="wrap">
+					<!-- 此处添加时间组件 -->
+					<time-tmp v-bind:user="userName"></time-tmp>
+
+				</div>
+			</div>
+			<div id="position" class="wrap">
+				您现在的位置：<a href="index.html">易买网</a> &gt; 在线留言
+			</div>
+			<div id="main" class="wrap">
+				<div class="lefter">
+					<!-- 此处添加组件left -->
+					<left-tmp></left-tmp>
+				</div>
+				<div class="main">
+					<div class="guestbook">
+						<h2>全部留言</h2>
+						<table class="search-tab" align="right">
+							<tr>
+								<th width="70">选择性别:</th>
+								<td>
+									<select name="search-sort" v-model="commentQuery.euSex">
+										<option value="">全部</option>
+										<option value="1">男</option>
+										<option value="2">女</option>
+									</select>
+								</td>
+								<th width="70">用户名:</th>
+								<td><input class="common-text" placeholder="用户名" name="euUserName" value="" id=""
+										type="text" v-model="commentQuery.euUserName" /></td>
+
+								<td>&nbsp;</td>
+								<td><input class="btn btn-primary btn2" name="sub" value="查询" type="button"
+										v-on:click="doQuery(1)" /></td>
+							</tr>
+						</table>
+						
+						</br></br>
+						&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;------------------------------------------------------------------------------------------------------------------------------
+						
+						<ul v-for="item in commentPage.list">
+							<li>
+								<dl>
+									<dd>网友{{item.user.euUserName}} &nbsp; &nbsp;
+										{{item.ecCreateTime | doTimeFilter(item.ecCreateTime)}}</dd>
+									<dd><img class="imageDivFather3"
+											v-bind:src="item.user.euPicture | doPictureFilter(item.user.euPicture)" />：{{item.ecContent}}
+									</dd>
+									<dd v-if="null != item.reply">卖家{{manage.euUserName}} &nbsp; &nbsp;
+										{{item.reply.erReplyTime | doTimeFilter(item.ecCreateTime)}}</dd>
+									<dd v-if="null != item.reply"><img class="imageDivFather3"
+											v-bind:src="manage.euPicture | doPictureFilter(manage.euPicture)" />：{{item.reply.erReplyContent}}
+									</dd>
+									<dd>------------------------------------------------------------------------------------------------------------------------------
+									</dd>
+								</dl>
+							</li>
+						</ul>
+
+						<div class="clear"></div>
+						<div class="pager">
+							<page-tmp v-on:query="doQuery" v-on:gopage="doGoPage" v-bind:cpage="commentPage"></page-tmp>
+						</div>
+						</br></br>
+						<div id="reply-box">
+							<form>
+								<table>
+									<tr>
+										<td class="field">昵称：</td>
+										<td><input class="text" type="text" name="guestName" v-model="user.euUserName"
+												readonly="readonly" /></td>
+									</tr>
+									<tr>
+										<td class="field">留言标题：</td>
+										<td><input class="text" type="text" name="guestTitle" v-model="comment.ecTitle"
+												v-on:blur="checkTitle()" />
+											<span v-bind:style="'color:'+what2">
+												{{msg2}}
+											</span>
+										</td>
+									</tr>
+									<tr>
+										<td class="field">留言内容：</td>
+										<td><textarea name="guestContent" v-model="comment.ecContent"
+												v-on:blur="checkContent()"></textarea>
+											<span v-bind:style="'color:'+what3">
+												{{msg3}}
+											</span>
+										</td>
+									</tr>
+									<tr>
+										<td></td>
+										<td><label class="ui-blue"><input type="button" name="submit" value="提交留言"
+													v-on:click="submit()" /></label></td>
+									</tr>
+								</table>
+							</form>
+						</div>
+					</div>
+				</div>
+
+				<div class="clear"></div>
+			</div>
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+	</body>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				num: '3',
+				userName: '用户',
+				user: '',
+				commentPage: {},
+				manage: {},
+				comment: {
+					ecTitle: '',
+					ecContent: ''
+				},
+				commentQuery: {
+					euUserName: '',
+					euSex: ''
+				},
+
+				what2: '',
+				msg2: '',
+				what3: '',
+				msg3: ''
+
+
+			},
+			methods: {
+				checkTitle: function() {
+					if (null == this.comment.ecTitle || '' == this.comment.ecTitle) {
+						this.what2 = "red"
+						this.msg2 = "标题不能为空"
+					} else {
+						this.what2 = "green"
+						this.msg2 = "√"
+					}
+				},
+				checkContent: function() {
+					if (null == this.comment.ecContent || '' == this.comment.ecContent) {
+						this.what3 = "red"
+						this.msg3 = "内容不能为空"
+					} else {
+						this.what3 = "green"
+						this.msg3 = "√"
+					}
+				},
+				//分页
+				doQuery: function(pageNo) {
+					axios.get(
+						server_url + '/comment/getCommentInnerListBy', {
+							params: {
+								pageNo: pageNo,
+								pageSize: 6,
+								euUserName:this.commentQuery.euUserName,
+								euSex:this.commentQuery.euSex
+							}
+						}
+					).then(res => {
+						console.log(res.data.t)
+						this.commentPage = res.data.t;
+
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+				//跳转
+				doGoPage: function(pageNo) {
+					//pageNo的值来自于分页条组件
+					//点击go按钮前需要对输入的页码进行判断验证,合法的页码才能请求
+					if (pageNo == null || pageNo == '' || isNaN(pageNo) || pageNo <= 0 || pageNo > this
+						.commentPage.totalPage) {
+						alert("页码不合法,请重新输入");
+						return;
+					}
+					//页码合法后调用上面的doQuery(pageNo)方法
+					this.doQuery(pageNo);
+				},
+				//获取卖家信息
+				getManageById: function() {
+					axios.get(
+						server_url + '/user/getManageById', {
+							params: {
+								euId: 5
+							}
+						}
+					).then(res => {
+						console.log("图片")
+						console.log(this.data)
+						this.manage = res.data.t;
+
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+				//增加信息
+				submit: function() {
+					this.checkTitle();
+					this.checkContent();
+					if ("green" == this.what2 && "green" == this.what3) {
+						axios.get(
+							server_url + '/comment/addComment', {
+								params: {
+									euId: this.user.euId,
+									ecTitle: this.comment.ecTitle,
+									ecContent: this.comment.ecContent
+								}
+							}
+						).then(res => {
+							location.reload();
+						}).catch(err => {
+							console.log(err);
+						});
+					}
+				}
+			},
+			filters: {
+				// 图片显示
+				doPictureFilter: function(euPicture) {
+					return server_url + euPicture;
+				},
+				// 时间显示
+				doTimeFilter: function(timeStamp) {
+					let year = new Date(timeStamp).getFullYear();
+					let month = new Date(timeStamp).getMonth() + 1 < 10 ? "0" + (new Date(timeStamp).getMonth() +
+							1) :
+						new Date(timeStamp).getMonth() + 1;
+					let date = new Date(timeStamp).getDate() < 10 ? "0" + new Date(timeStamp).getDate() :
+						new Date(
+							timeStamp).getDate();
+					let hh = new Date(timeStamp).getHours() < 10 ? "0" + new Date(timeStamp).getHours() :
+						new Date(
+							timeStamp).getHours();
+					let mm = new Date(timeStamp).getMinutes() < 10 ? "0" + new Date(timeStamp).getMinutes() :
+						new Date(
+							timeStamp).getMinutes();
+					let ss = new Date(timeStamp).getSeconds() < 10 ? "0" + new Date(timeStamp).getSeconds() :
+						new Date(
+							timeStamp).getSeconds();
+					var nowTime = year + "年" + month + "月" + date + "日" + " " + hh + ":" + mm + ':' + ss;
+					return nowTime;
+				}
+			},
+			mounted: function() { //mounted函数在页面加载时执行
+				//判断是否登录了
+				if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+					var user = JSON.parse(sessionStorage.getItem("userMsg"));
+					//判断账号是否被禁用
+					if (null != user.euStatus && user.euStatus == "1") {
+						//判断账号是否有用户名
+						if (null != user.euUserName) {
+							this.user = user;
+							this.userName = user.euUserName;
+							this.doQuery(1);
+							this.getManageById();
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+				} else {
+					window.location.href = "../shop/login.html"
+				}
+			},
+			//注册组件
+			components: {
+				'head-tmp': head,
+				'time-tmp': time,
+				'left-tmp': left,
+				'footer-tmp': footer,
+				'page-tmp': pageTmp
+			}
+		})
+	</script>
+</html>

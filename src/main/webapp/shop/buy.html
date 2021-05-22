@@ -1,0 +1,239 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>易买网 - 购买</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/shop.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+		<script type="text/javascript" src="../scripts/pageTemplate.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:cnum="num"></head-tmp>
+			<div id="childNav">
+				<div class="wrap">
+					<!-- 此处添加时间组件 -->
+					<time-tmp v-bind:user="user.euUserName"></time-tmp>
+
+				</div>
+
+			</div>
+			<div id="position" class="wrap">
+				您现在的位置：<a href="index.html">易买网</a> &gt; 购买
+			</div>
+
+
+			<div class="wrap">
+				<div>
+					<a href="">添加地址</a>
+				</div>
+
+				确认收货地址：
+				<div v-for="item in address">
+					<!-- <input type="radio" checked name="address">张三 广东省深圳市南山区高新南二道3307号<br /> -->
+					<input type="radio" name="address" v-bind:value="item.esaId" v-model="radio">{{item.esaConsignee}}
+					，联系方式：{{item.esaMobile}}，{{item.esaProvince}}省{{item.esaCity}}市{{item.esaCounty}}区，详细地址：{{item.esaDetailedAddress}}</input>
+				</div>
+			</div>
+			<div class="wrap">
+				<div id="shopping">
+					<table>
+						<tr>
+							<th>商品名称</th>
+							<th>商品价格</th>
+							<th>购买数量</th>
+							<!-- <th>操作</th> -->
+						</tr>
+						<tr id="product_id_1">
+							<td class="thumb">
+								<img v-bind:src="product.epFileName | doPictureFilter(product.epFileName)" width="80px" height="80px"/>
+								<a v-bind:href="'product-view.html?epId='+product.epId">{{product.epName}}</a>
+							</td>
+
+							<td class="price" id="price_id_1">
+								<span>￥{{product.epPrice}}</span>
+								<input type="hidden" v-bind:value="product.epPrice" />
+							</td>
+
+							<td class="number">
+								<dl>
+									<button v-bind:disabled="count == 1" v-on:click="doReduce"> - </button>
+									{{count}}
+									<button v-on:click="doAdd"> + </button>
+								</dl>
+							</td>
+							<!-- <td class="delete"><a href="javascript:void(0)" v-on:click="doDelete(escId)">删除</a>
+							</td> -->
+						</tr>
+					</table>
+
+					<div id="product" class="button">
+						<div class="infos">
+							<div class="buy">
+								<p>总金额：<span class="price">￥{{totalPrice}}</span></p>
+							</div>
+						</div>
+					</div>
+					</br>
+					</br>
+					<div class="button">
+						<input type="button" value="" v-on:click="Goto" />
+					</div>
+				</div>
+				<!-- <script type="text/javascript">
+			document.write("Cookie中记录的购物车商品ID："+ getCookie("product") + "，可以在动态页面中进行读取");
+		</script> -->
+			</div>
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+		</br>
+	</body>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				count: 1,
+				num: '3',
+				user: {
+
+				},
+				
+				radio: '',
+				address: [
+				],
+				
+				product: ''
+
+			},
+			methods: {
+				doReduce: function() {
+					this.count--;
+				},
+				doAdd: function() {
+					this.count++;
+				},
+				//结算购物车
+				Goto: function() {
+					
+					//第二个请求，传递数据，生成订单
+					axios.get(
+						server_url + '/order/addOrder2', {
+							params: {
+								
+								esaId: this.radio,
+								euId: this.user.euId,
+
+								epId: this.product.epId,
+								eodQuantity: this.count
+								
+							}
+						}
+					).then(res => {	
+					}).catch(err => {
+						console.log(err);
+					});
+					window.location.href = 'shopping-result.html';
+				},
+				//删除购物车中的某个商品
+				/* doDelete: function(escId) {
+					axios.get(
+						server_url + '/shoppingCart/deleteShoppingCartById', {
+							params: {
+								euId: this.user.euId,
+								escId: escId
+								
+							}
+						}
+					).then(res => {
+						this.doQuery(1)
+						this.totalPrice=res.data.t;
+					}).catch(err => {
+						console.log(err);
+					});
+				} */
+			},
+			filters: {
+				// 图片显示
+				doPictureFilter: function(epFileName) {
+					return server_url + epFileName;
+				}
+			},
+
+			mounted: function() { //mounted函数在页面加载时执行
+				//判断是否登录了
+				if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+					var user = JSON.parse(sessionStorage.getItem("userMsg"));
+					//判断账号是否被禁用
+					if (null != user.euStatus && user.euStatus == "1") {
+						//判断账号是否有用户名
+						if (null != user.euUserName) {
+							this.user = user;
+							var epId = getUrlParam("epId");
+							//1查出地址
+							axios.get(
+								server_url + '/shippingAddress/getShippingAddressByEuId', {
+									params: {
+										euId: user.euId
+									}
+								}
+							).then(res => {
+								this.address = res.data.t;
+								for (var i = 0; i < res.data.t.length; i++) {
+									//遍历取出默认地址给radio	
+									if (res.data.t[i].esaDefault == "1") {
+										this.radio = res.data.t[i].esaId;
+									}
+								}
+							}).catch(err => {
+								console.log(err);
+							});
+
+							//2查商品数据
+							axios.get(
+								server_url + '/product/getProductById', {
+									params: {
+										epId: epId
+									}
+								}
+							).then(res => {
+								this.product = res.data.t;
+							}).catch(err => {
+								console.log(err);
+							});
+							
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+				} else {
+					window.location.href = "../shop/login.html"
+				}
+			},
+			computed:{
+				totalPrice:function(){
+					var sum = this.product.epPrice * this.count; 
+					return sum;
+				}
+			},
+			//注册组件
+			components: {
+				'head-tmp': head,
+				'time-tmp': time,
+				'left-tmp': left,
+				'lastview-tmp': lastView,
+				'footer-tmp': footer
+				
+			}
+		});
+	</script>
+</html>

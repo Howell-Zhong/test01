@@ -1,0 +1,326 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>易买网 - 购物车</title>
+		<link type="text/css" rel="stylesheet" href="../css/style.css" />
+		<script type="text/javascript" src="../scripts/function.js"></script>
+		<script type="text/javascript" src="../scripts/vue.js"></script>
+		<script type="text/javascript" src="../scripts/shop.js"></script>
+		<script type="text/javascript" src="../scripts/param.js"></script>
+		<script type="text/javascript" src="../scripts/server_url.js"></script>
+		<script type="text/javascript" src="../scripts/axios.min.js"></script>
+		<script type="text/javascript" src="../scripts/pageTemplate.js"></script>
+	</head>
+	<body>
+		<div id="app">
+			<!-- 此处添加组件head -->
+			<head-tmp v-bind:cnum="num"></head-tmp>
+			<div id="childNav">
+				<div class="wrap">
+					<!-- 此处添加时间组件 -->
+					<time-tmp v-bind:user="user.euUserName"></time-tmp>
+
+				</div>
+
+			</div>
+			<div id="position" class="wrap">
+				您现在的位置：<a href="index.html">易买网</a> &gt; 购物车
+			</div>
+
+
+			<div class="wrap">
+				<div>
+					<a href="../user/address-modify.html">添加地址</a>
+				</div>
+
+				确认收货地址：
+				<div v-for="item in address">
+					<!-- 这里单选框，默认选中 -->
+					<input type="radio" name="address" v-bind:value="item.esaId" v-model="radio">{{item.esaConsignee}}
+					，联系方式：{{item.esaMobile}}，{{item.esaProvince}}省{{item.esaCity}}市{{item.esaCounty}}区，详细地址：{{item.esaDetailedAddress}}</input>
+				</div>
+			</div>
+			<div class="wrap">
+				<div id="shopping">
+					<table>
+						<tr>
+							<th>商品名称</th>
+							<th>商品价格</th>
+							<th>购买数量</th>
+							<th>操作</th>
+						</tr>
+						<!-- 此处item为购物车，数据库设计原理是用户每添加一个产品，就会产生一个购物车，
+						用购物车来记载商品的数量，所以一个用户有多个购物车 -->
+						<tr id="product_id_1" v-for="item in shoppingCartPage.list">
+							<!-- 展示图片 -->
+							<td class="thumb">
+								<img v-bind:src="item.product.epFileName | doPictureFilter(item.product.epFileName)" width="80px" height="80px"/>
+								<a v-bind:href="'product-view.html?epId='+item.epId">{{item.product.epName}}</a>
+							</td>
+							<!-- 展示价格 -->
+							<td class="price" id="price_id_1">
+								<span>￥{{item.product.epPrice}}</span>
+								<input type="hidden" v-bind:value="item.product.epPrice" />
+							</td>
+							<!-- 修改单个购物车数量 -->
+							<td class="number">
+								<dl>
+									<button v-bind:disabled="item.escQuantity == 1" v-on:click="doReduce(item)"> - </button>
+									{{item.escQuantity}}
+									<button v-on:click="doAdd(item)"> + </button>
+								</dl>
+							</td>
+							<!-- 删除此商品购物车的操作 -->
+							<td class="delete">
+								<a href="javascript:void(0)" v-on:click="doDelete(item.escId)">删除</a>
+							</td>
+						</tr>
+
+						<tr>
+							<!-- 这是分页 -->
+							<td colspan="7">
+								<page-tmp v-on:query="doQuery" v-on:gopage="doGoPage" v-bind:cpage="shoppingCartPage"></page-tmp>
+							</td>
+						</tr>
+					</table>
+					<!-- 这是计算总金额 -->
+					<div id="product" class="button">
+						<div class="infos">
+							<div class="buy">
+								<p>总金额：<span class="price">￥{{totalPrice}}</span></p>
+							</div>
+						</div>
+					</div>
+					</br>
+					</br>
+					<div class="button">
+						<!-- 这是结算按钮 -->
+						<input type="button" value="" v-on:click="Goto" />
+					</div>
+				</div>
+			</div>
+			<!-- 此处添加组件footer -->
+			<footer-tmp></footer-tmp>
+		</div>
+	</body>
+	<script>
+		var vm = new Vue({
+			el: '#app',
+			data: {
+				num: '3',
+				user: {
+
+				},
+				radio: '',
+				address: [
+				],
+				shoppingCartPage: {},
+				totalPrice:''
+
+			},
+			methods: {
+				//减少商品数量，此处应该可以把item传进来，直接修改item下的数量
+				doReduce: function(item) {
+					//rEscQuantity就是改编后的数量
+					var rEscQuantity = item.escQuantity - 1;
+					axios.get(
+						server_url + '/shoppingCart/updateShoppingCart', {
+							params: {
+								//euId是为了在后台计算改用户所有购物车的总金额
+								euId: this.user.euId,
+								//escId是为了查询出哪个购物车的数量改变了，传入数量
+								escId: item.escId,
+								escQuantity: rEscQuantity
+							}
+						}
+					).then(res => {
+						//返回后台计算出的总金额到页面上
+						this.totalPrice=res.data.t;
+						
+						//此处应该可以把item传进来，直接修改item下的数量
+						--item.escQuantity;
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+				//增加商品数量
+				doAdd: function(item) {
+					var aEscQuantity = item.escQuantity + 1;
+					axios.get(
+						server_url + '/shoppingCart/updateShoppingCart', {
+							params: {
+								euId: this.user.euId,
+								escId: item.escId,
+								escQuantity: aEscQuantity
+							}
+						}
+					).then(res => {
+						this.totalPrice=res.data.t;
+						++item.escQuantity;
+
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+				//计算金额方法
+				doTotalPrice: function() {
+					axios.get(
+						server_url + '/shoppingCart/getTotalPriceByEuId', {
+							params: {
+								euId: this.user.euId,
+							}
+						}
+					).then(res => {
+						this.totalPrice=res.data.t;
+						
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+				
+				//结算购物车
+				Goto: function() {
+					//第一个请求，更新金额，防止前端被篡改
+					this.doTotalPrice()
+					
+					//第二个请求，传递数据，生成订单
+					axios.get(
+						server_url + '/order/addOrder', {
+							params: {
+								esaId: this.radio,
+								euId: this.user.euId	
+							}
+						}
+					).then(res => {
+						//第三个请求，删除已结算的购物车
+						axios.get(
+							server_url + '/shoppingCart/deleteShoppingCartByEuId', {
+								params: {
+									euId: this.user.euId,
+								}
+							}
+						).then(res => {
+							window.location.href = 'shopping-result.html';
+						}).catch(err => {
+							console.log(err);
+						});
+					}).catch(err => {
+						console.log(err);
+					});
+					
+					
+				},
+				//删除购物车中的某个商品
+				doDelete: function(escId) {
+					axios.get(
+						server_url + '/shoppingCart/deleteShoppingCartById', {
+							params: {
+								euId: this.user.euId,
+								escId: escId
+								
+							}
+						}
+					).then(res => {
+						this.doQuery(1)
+						this.totalPrice=res.data.t;
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+
+				//分页
+				doQuery: function(pageNo) {
+					axios.get(
+						server_url + '/shoppingCart/getShoppingCartByEuId', {
+							params: {
+								pageNo: pageNo,
+								pageSize: 6,
+								euId: this.user.euId,
+							}
+						}
+					).then(res => {
+						console.log(res.data.t)
+						this.shoppingCartPage = res.data.t;
+
+					}).catch(err => {
+						console.log(err);
+					});
+				},
+				//跳转
+				doGoPage: function(pageNo) {
+					//pageNo的值来自于分页条组件
+					//点击go按钮前需要对输入的页码进行判断验证,合法的页码才能请求
+					if (pageNo == null || pageNo == '' || isNaN(pageNo) || pageNo <= 0 || pageNo > this
+						.shoppingCartPage.totalPage) {
+						alert("页码不合法,请重新输入");
+						return;
+					}
+					//页码合法后调用上面的doQuery(pageNo)方法
+					this.doQuery(pageNo);
+				}
+			},
+			filters: {
+				// 图片显示
+				doPictureFilter: function(epFileName) {
+					return server_url + epFileName;
+				}
+			},
+
+			mounted: function() { //mounted函数在页面加载时执行
+				//判断是否登录了，这里是页面加载的时候判断，防止有人直接访问我们的页面，
+				//此处判断实际上可以提取到组件，这样就不用每个页面都写一遍了
+				if (null != sessionStorage.getItem("userMsg") && '' != sessionStorage.getItem("userMsg")) {
+					var user = JSON.parse(sessionStorage.getItem("userMsg"));
+					//判断账号是否被禁用
+					if (null != user.euStatus && user.euStatus == "1") {
+						//判断账号是否有用户名
+						if (null != user.euUserName) {
+							this.user = user;
+
+							//1查出地址
+							axios.get(
+								server_url + '/shippingAddress/getShippingAddressByEuId', {
+									params: {
+										euId: user.euId
+									}
+								}
+							).then(res => {
+								this.address = res.data.t;
+								for (var i = 0; i < res.data.t.length; i++) {
+									//遍历取出默认地址给radio	
+									if (res.data.t[i].esaDefault == "1") {
+										this.radio = res.data.t[i].esaId;
+									}
+								}
+							}).catch(err => {
+								console.log(err);
+							});
+
+							//2查该用户所有的购物车
+							this.doQuery(1);
+							//3计算购物车金额
+							this.doTotalPrice()
+						} else {
+							window.location.href = "../shop/login.html"
+						}
+					} else {
+						window.location.href = "../shop/login.html"
+					}
+				} else {
+					window.location.href = "../shop/login.html"
+				}
+			},
+			//注册组件
+			components: {
+				'head-tmp': head,
+				'time-tmp': time,
+				'left-tmp': left,
+				'lastview-tmp': lastView,
+				'footer-tmp': footer,
+				'page-tmp': pageTmp
+			}
+		});
+	</script>
+</html>

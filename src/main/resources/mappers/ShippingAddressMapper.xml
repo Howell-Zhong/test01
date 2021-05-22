@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.ShippingAddressMapper">
+    <!--统计总条数-->
+    <select id="getShippingAddressCount" resultType="int" parameterType="com.jt99.myeasybuy.query.ShippingAddressQuery">
+        select count(esaId)
+        from easybuy_shipping_address
+    </select>
+
+    <!--条件分页查-->
+    <select id="getShippingAddressListBy" resultType="com.jt99.myeasybuy.entity.ShippingAddress"
+            parameterType="com.jt99.myeasybuy.query.ShippingAddressQuery">
+        SELECT esaId,
+               euId,
+               esaConsignee,
+               esaMobile,
+               esaProvince,
+               esaCity,
+               esaCounty,
+               esaDetailedAddress,
+               esaDefault
+        FROM easybuy_shipping_address limit #{startIndex},#{pageSize}
+    </select>
+
+    <!--查所有-->
+    <select id="getShippingAddressList" resultType="com.jt99.myeasybuy.entity.ShippingAddress">
+        SELECT esaId,
+               euId,
+               esaConsignee,
+               esaMobile,
+               esaProvince,
+               esaCity,
+               esaCounty,
+               esaDetailedAddress,
+               esaDefault
+        FROM easybuy_shipping_address;
+    </select>
+
+    <!--增,要看id会不会自增-->
+    <insert id="addShippingAddress">
+        INSERT INTO easybuy_shipping_address (esaId, euId, esaConsignee, esaMobile, esaProvince, esaCity,
+                                              esaCounty, esaDetailedAddress, esaDefault)
+        VALUES (#{esaId}, #{euId}, #{esaConsignee}, #{esaMobile}, #{esaProvince}, #{esaCity}, #{esaCounty},
+                #{esaDetailedAddress}, #{esaDefault});
+    </insert>
+
+    <!--删-->
+    <delete id="deleteShippingAddressById">
+        DELETE
+        FROM easybuy_shipping_address
+        WHERE esaId = #{esaId};
+    </delete>
+
+    <!--改-->
+    <update id="updateShippingAddress">
+        UPDATE easybuy_shipping_address
+        SET euId=#{euId},
+            esaConsignee=#{esaConsignee},
+            esaMobile=#{esaMobile},
+            esaProvince=#{esaProvince},
+            esaCity=#{esaCity},
+            esaCounty=#{esaCounty},
+            esaDetailedAddress=#{esaDetailedAddress},
+            esaDefault=#{esaDefault}
+        WHERE esaId = #{esaId};
+    </update>
+
+    <!--查单个-->
+    <select id="getShippingAddressById" resultType="com.jt99.myeasybuy.entity.ShippingAddress">
+        SELECT esaId,
+               euId,
+               esaConsignee,
+               esaMobile,
+               esaProvince,
+               esaCity,
+               esaCounty,
+               esaDetailedAddress,
+               esaDefault
+        FROM easybuy_shipping_address
+        WHERE esaId = #{esaId};
+    </select>
+
+    <!--根据用户id查地址-->
+    <select id="getShippingAddressByEuId" resultType="com.jt99.myeasybuy.entity.ShippingAddress">
+        SELECT esaId,
+               euId,
+               esaConsignee,
+               esaMobile,
+               esaProvince,
+               esaCity,
+               esaCounty,
+               esaDetailedAddress,
+               esaDefault
+        FROM easybuy_shipping_address
+        WHERE euId = #{id};
+    </select>
+
+    <!--删多个-->
+    <delete id="deleteShippingAddresssByIds">
+        delete
+        from easybuy_shipping_address
+        where esaId in #{ids};
+    </delete>
+
+</mapper>

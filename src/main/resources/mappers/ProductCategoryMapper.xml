@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jt99.myeasybuy.dao.ProductCategoryMapper">
+    <!-- 查询父类 -->
+    <select id="getProductClassFather" resultType="com.jt99.myeasybuy.entity.ProductCategory">
+        select * from easybuy_product_category
+        where epcFatherId = 0;
+    </select>
+
+    <!-- 根据父类查询子类 -->
+    <select id="getProductClassChildByFather" resultType="com.jt99.myeasybuy.entity.ProductCategory" parameterType="int">
+        select * from easybuy_product_category
+        where epcFatherId = #{epcId}
+    </select>
+
+    <select id="getProductClassAll" resultType="com.jt99.myeasybuy.query.ProductCategoryQuery">
+        select * from easybuy_product_category;
+    </select>
+
+    <select id="getProductClassList" resultType="com.jt99.myeasybuy.entity.ProductCategory">
+        select * from easybuy_product_category where epcLevel = 2;
+    </select>
+
+    <select id="getProductClassById" resultType="com.jt99.myeasybuy.entity.ProductCategory" parameterType="int">
+        select * from easybuy_product_category
+        where epcId = #{epcId};
+    </select>
+
+    <sql id="commonSql">
+        <if test="epcId != null">
+            epcId = #{epcId},
+        </if>
+        <if test="epcName != null and epcName != ''">
+            epcName = #{epcName},
+        </if>
+        <if test="epcFatherId != null">
+            epcFatherId = #{epcFatherId},
+        </if>
+        <if test="epcLevel != null">
+            epcLevel = #{epcLevel},
+        </if>
+    </sql>
+
+    <update id="updateProductClass" parameterType="com.jt99.myeasybuy.entity.ProductCategory">
+        update easybuy_product_category
+        <set>
+            <include refid="commonSql"></include>
+        </set>
+        where epcId = #{epcId};
+    </update>
+
+    <insert id="addProductClass" parameterType="com.jt99.myeasybuy.entity.ProductCategory">
+        insert into easybuy_product_category
+        (epcName,epcFatherId,epcLevel)
+        values (#{epcName},#{epcFatherId},#{epcLevel});
+    </insert>
+
+    <delete id="deleteProductClass" parameterType="int">
+        delete from easybuy_product_category
+        where epcId = #{epcId};
+    </delete>
+</mapper>
